@@ -62,7 +62,7 @@ class QuartoGame:
         self.player1Name = self.player1.name if self.player1.name is not None else name1
         self.player2Name = self.player2.name if self.player2.name is not None else name2
 
-    def __showPlayerName(self, isPlayerOneTurn):
+    def _showPlayerName(self, isPlayerOneTurn):
         if isPlayerOneTurn:
             print(f"\n ------{self.player1Name}'s Turn---------\n")
         else:
@@ -216,7 +216,7 @@ class QuartoGame:
     def play(self, randomizeFirstMove=True):
         isPlayerOneTurn = True
         if self.gui_mode:
-            self.__showPlayerName(isPlayerOneTurn)
+            self._showPlayerName(isPlayerOneTurn)
 
         # first move
         if randomizeFirstMove:
@@ -231,7 +231,7 @@ class QuartoGame:
         # subsequent moves
         for _ in range(len(self.availablePositions) - 1):
             if self.gui_mode:
-                self.__showPlayerName(isPlayerOneTurn)
+                self._showPlayerName(isPlayerOneTurn)
             if not self.tryMakeMove(isPlayerOneTurn):
                 return -1 if isPlayerOneTurn else -2
             if self.gui_mode:
@@ -244,7 +244,7 @@ class QuartoGame:
 
         # Place last piece and set nextPiece to nothing
         if self.gui_mode:
-            self.__showPlayerName(isPlayerOneTurn)
+            self._showPlayerName(isPlayerOneTurn)
         self.makeLastMove()
 
         if self.gui_mode:
@@ -259,7 +259,7 @@ class QuartoGame:
     def __playWithLogs(self, randomizeFirstMove=True):
         isPlayerOneTurn = True
         if self.gui_mode:
-            self.__showPlayerName(isPlayerOneTurn)
+            self._showPlayerName(isPlayerOneTurn)
 
         # first move
         if randomizeFirstMove:
@@ -275,7 +275,7 @@ class QuartoGame:
         # subsequent moves
         for _ in range(len(self.availablePositions) - 1):
             if self.gui_mode:
-                self.__showPlayerName(isPlayerOneTurn)
+                self._showPlayerName(isPlayerOneTurn)
             self.detailedLogFile.write(self.encodeBoard() + ",")
 
             if not self.tryMakeMove(isPlayerOneTurn):
@@ -296,7 +296,7 @@ class QuartoGame:
 
         # Place last piece and set nextPiece to nothing
         if self.gui_mode:
-            self.__showPlayerName(isPlayerOneTurn)
+            self._showPlayerName(isPlayerOneTurn)
         self.detailedLogFile.write(
             f"{self.encodeBoard()},{list(self.availablePositions)[0]},None,None\n"
         )
