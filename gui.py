@@ -2,9 +2,14 @@ import tkinter as tk
 from tkinter import font
 from PIL import ImageTk, Image
 from quarto import *
+from enum import Enum
 import quarto_agents
 
 BLANK_TILE = 16
+
+class MoveType(Enum):
+    PLACE_PIECE = 1
+    PICK_PIECE = 2
 
 class QuartoGUI(tk.Tk):
     def __init__(self):
@@ -15,6 +20,8 @@ class QuartoGUI(tk.Tk):
         self._game = QuartoGame(
             quarto_agents.HumanPlayer(), quarto_agents.HumanPlayer(), gui_mode=True, bin_mode=False
         )
+        self.isPlayerOneTurn = True
+        self.moveType = MoveType.PICK_PIECE
 
         self._loadPhotos()
         self._createMenu()
@@ -73,6 +80,19 @@ class QuartoGUI(tk.Tk):
         self.startButton.pack(side=tk.RIGHT)
         self.startButton.bind("<ButtonPress-1>", self.play)
 
+    def _placePiece(self, row, col):
+        if self.moveType == MoveType.PICK_PIECE:
+            self.display2["text"] = "Please pick a piece"
+
+        self.updateCell
+        pass
+
+    def _pickPiece(self, row, col):
+        if self.moveType == MoveType.PLACE_PIECE:
+            self.display2["text"] = "Please place your current piece first"
+
+        pass
+
     def _createBoardGrid(self):
         self._cells = {}
         self._takenCells = set()
@@ -90,6 +110,7 @@ class QuartoGUI(tk.Tk):
                     image=self._photos[BLANK_TILE],
                     compound="center",
                     bd=0,
+                    command=lambda row=row, col=col : self._placePiece(row, col)
                 )
                 self._cells[(row, col)] = button
                 button.grid(row=row, column=col, padx=3, pady=3, sticky="nsew")
@@ -112,6 +133,7 @@ class QuartoGUI(tk.Tk):
                     compound=tk.RIGHT,
                     relief=tk.FLAT,
                     bd=0,
+                    command=lambda row=row, col=col : self._pickPiece(row, col)
                 )
                 self._pieces[(row, col)] = button
                 button.grid(row=row, column=col, padx=5, pady=5)
@@ -145,6 +167,7 @@ class QuartoGUI(tk.Tk):
             self.display2["text"] = "This piece is not available"
             return False
         return True
+    
 
     def makeMove(self, position, nextPiece):
         # validation checks
@@ -169,114 +192,99 @@ class QuartoGUI(tk.Tk):
             print("Move successful")
         return True
 
-    def getPlayerMove(self, isPlayerOneTurn, isFirstMove=False):
-        if isPlayerOneTurn:
-            if self.player1IsHuman:
-                pass
-            else:
-                if isFirstMove:
-                    return self._game.pickRandomAvailablePiece()
-                return self._game.player1.makeMove(self._game.getGameState(), gui_mode=self._game.gui_mode)
-        else:
-            if self.player2IsHuman:
-                pass
-            else:
-                if isFirstMove:
-                    return self._game.pickRandomAvailablePiece()
-                return self._game.player2.makeMove(self._game.getGameState(), gui_mode=self._game.gui_mode)
-
     def makeAgentFirstMove(self):
         firstMove = self._game.pickRandomAvailablePiece()
         self._game.makeFirstMove(firstMove)
         self.updateCurrent(firstMove)
-        
 
+        if self._game.gui_mode:
+            self._game.showGameState()
+        self.toggleGridFreeze(toggleFreezeOn=False)
+
+        self.isPlayerOneTurn = False
+        self.moveType = MoveType.PLACE_PIECE
+        self.display["text"] = "Player 2's Turn"
+        self.display2["text"] = "Place your piece"
+    
     def play(self, event):
-        isPlayerOneTurn = True
         self.display["text"] = "Player 1's turn"
         
-        # first move
         if not self.player1IsHuman:
             self.toggleGridFreeze()
             self.display2["text"] = "Agent is picking the first piece"
             self.after(2000, self.makeAgentFirstMove)
-            self.toggleGridFreeze(toggleFreezeOn=False)
-            isPlayerOneTurn = False
 
         self.startButton.bind("<ButtonPress-1>", self._resetBoard)
         self.startButton.configure(text="Reset")
 
-        if self._game.gui_mode:
-            self._game.showGameState()
-
         # subsequent moves
-        for i in range(len(self._game.availablePositions) - 1):
-            if self._game.gui_mode:
-                self._game._showPlayerName(isPlayerOneTurn)
+        # for i in range(len(self._game.availablePositions) - 1):
+        #     if self._game.gui_mode:
+        #         self._game._showPlayerName(isPlayerOneTurn)
 
-            # player 1
-            if isPlayerOneTurn:
-                self.display["text"] = "Player 1's turn"
-                self.display2["text"] = "Agent is playing..."
+        #     # player 1
+        #     if isPlayerOneTurn:
+        #         self.display["text"] = "Player 1's turn"
+        #         self.display2["text"] = "Agent is playing..."
 
-                for i in range(3):
-                    position, nextPiece = self._game.player1.makeMove(
-                        self._game.getGameState(), gui_mode=self._game.gui_mode
-                    )
-                    validMove = self.makeMove(position, nextPiece)
-                    if validMove:
-                        break
-                    elif i == 2:
-                        print("Three invalid moves made - game ended")
-                        return
-            # player 2
-            else:
-                self.display["text"] = "Player 2's turn"
-                self.display2["text"] = "Agent is playing..."
+        #         for i in range(3):
+        #             position, nextPiece = self._game.player1.makeMove(
+        #                 self._game.getGameState(), gui_mode=self._game.gui_mode
+        #             )
+        #             validMove = self.makeMove(position, nextPiece)
+        #             if validMove:
+        #                 break
+        #             elif i == 2:
+        #                 print("Three invalid moves made - game ended")
+        #                 return
+        #     # player 2
+        #     else:
+        #         self.display["text"] = "Player 2's turn"
+        #         self.display2["text"] = "Agent is playing..."
 
-                for i in range(3):
-                    position, nextPiece = self._game.player2.makeMove(
-                        self._game.getGameState(), gui_mode=self._game.gui_mode
-                    )
-                    validMove = self.makeMove(position, nextPiece)
-                    if validMove:
-                        break
-                    elif i == 2:
-                        print("Three invalid moves made - game ended")
-                        return
+        #         for i in range(3):
+        #             position, nextPiece = self._game.player2.makeMove(
+        #                 self._game.getGameState(), gui_mode=self._game.gui_mode
+        #             )
+        #             validMove = self.makeMove(position, nextPiece)
+        #             if validMove:
+        #                 break
+        #             elif i == 2:
+        #                 print("Three invalid moves made - game ended")
+        #                 return
 
-            if self._game.gui_mode:
-                self._game.showGameState()
+        #     if self._game.gui_mode:
+        #         self._game.showGameState()
 
-            if qutil.isGameOver(self._game.board):
-                if isPlayerOneTurn:
-                    self.display["text"] = "Player 1 Won!"
-                    self.display2["text"] = ""
-                else:
-                    self.display["text"] = "Player 2 Won!"
-                    self.display2["text"] = ""
-                return
-            isPlayerOneTurn = not isPlayerOneTurn
+        #     if qutil.isGameOver(self._game.board):
+        #         if isPlayerOneTurn:
+        #             self.display["text"] = "Player 1 Won!"
+        #             self.display2["text"] = ""
+        #         else:
+        #             self.display["text"] = "Player 2 Won!"
+        #             self.display2["text"] = ""
+        #         return
+        #     isPlayerOneTurn = not isPlayerOneTurn
 
-        # Place last piece and set nextPiece to nothing
-        if self._game.gui_mode:
-            self._game._showPlayerName(isPlayerOneTurn)
-        self._game.makeLastMove()
+        # # Place last piece and set nextPiece to nothing
+        # if self._game.gui_mode:
+        #     self._game._showPlayerName(isPlayerOneTurn)
+        # self._game.makeLastMove()
 
-        if self._game.gui_mode:
-            self._game.showGameState()
+        # if self._game.gui_mode:
+        #     self._game.showGameState()
 
-        if qutil.isGameOver(self._game.board):
-            if isPlayerOneTurn:
-                self.display["text"] = "Player 1 Won!"
-                self.display2["text"] = ""
-            else:
-                self.display["text"] = "Player 2 Won!"
-                self.display2["text"] = ""
-            return
-        else:
-            self.display["text"] = "DRAW!"
-            self.display2["text"] = ""
+        # if qutil.isGameOver(self._game.board):
+        #     if isPlayerOneTurn:
+        #         self.display["text"] = "Player 1 Won!"
+        #         self.display2["text"] = ""
+        #     else:
+        #         self.display["text"] = "Player 2 Won!"
+        #         self.display2["text"] = ""
+        #     return
+        # else:
+        #     self.display["text"] = "DRAW!"
+        #     self.display2["text"] = ""
 
     def updateCurrent(self, piece):
         target = self.currentButton
