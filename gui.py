@@ -4,48 +4,41 @@ from PIL import ImageTk, Image
 from quarto import *
 import quarto_agents
 
+BLANK_TILE = 16
 
 class QuartoGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Quarto Game")
+        self.player1IsHuman = True
+        self.player2IsHuman = True
         self._game = QuartoGame(
             quarto_agents.HumanPlayer(), quarto_agents.RandomAgent(), gui_mode=True, bin_mode=False
         )
 
-        self._initGameState()
-        self._load_photos()
-        self._create_menu()
-        self._create_board_display()
-        self._create_board_grid()
-        self._create_piece_grid()
+        self._loadPhotos()
+        self._createMenu()
+        self._createBoardDisplay()
+        self._createBoardGrid()
+        self._createPieceGrid()
 
-    def _initGameState(self):
-        self._cells = {}
-        self.takenCells = set()
-        self._pieces = {}
-        self.takenPieces = set()
-        self._game.resetGame()
-
-    def _load_photos(self):
+    def _loadPhotos(self):
         self._photos = []
-        image_paths = [f"images/{i}.png" for i in range(17)]
-        for image_path in image_paths:
-            img = Image.open(image_path)
+        imagePaths = [f"images/{i}.png" for i in range(17)]
+        for imagePath in imagePaths:
+            img = Image.open(imagePath)
             img = img.resize((int(0.75 * img.width), int(0.75 * img.height)))
             photo = ImageTk.PhotoImage(img)
             self._photos.append(photo)
 
-    def _create_menu(self):
+    def _createMenu(self):
         menu_bar = tk.Menu(master=self)
         self.config(menu=menu_bar)
         file_menu = tk.Menu(master=menu_bar)
-        file_menu.add_command(label="Play Again", command=self.reset_board)
-        file_menu.add_separator()
         file_menu.add_command(label="Exit", command=quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
-    def _create_board_display(self):
+    def _createBoardDisplay(self):
         display_frame = tk.Frame(master=self)
         display_frame.pack(fill=tk.X, padx=100)
         self.display = tk.Label(
@@ -63,7 +56,7 @@ class QuartoGUI(tk.Tk):
             height=100,
             text="Current",
             font=("Helvetica 12 bold"),
-            image=self._photos[16],
+            image=self._photos[BLANK_TILE],
             compound="center",
         )
         self.startButton = tk.Button(
@@ -80,7 +73,8 @@ class QuartoGUI(tk.Tk):
         self.startButton.pack(side=tk.RIGHT)
         self.startButton.bind("<ButtonPress-1>", self.play)
 
-    def _create_board_grid(self):
+    def _createBoardGrid(self):
+        self._cells = {}
         grid_frame = tk.Frame(master=self, background="black", padx=20, pady=20)
         grid_frame.pack(padx=50, pady=50, side=tk.LEFT)
         for row in range(4):
@@ -92,14 +86,15 @@ class QuartoGUI(tk.Tk):
                     height=100,
                     text=4 * row + col,
                     font=("Helvetica 12 bold"),
-                    image=self._photos[16],
+                    image=self._photos[BLANK_TILE],
                     compound="center",
                     bd=0,
                 )
                 self._cells[(row, col)] = button
                 button.grid(row=row, column=col, padx=3, pady=3, sticky="nsew")
 
-    def _create_piece_grid(self):
+    def _createPieceGrid(self):
+        self._pieces = {}
         grid_frame = tk.Frame(master=self, background="#876c3e")
         grid_frame.pack(padx=50, pady=20, side=tk.LEFT)
 
@@ -118,6 +113,18 @@ class QuartoGUI(tk.Tk):
                 )
                 self._pieces[(row, col)] = button
                 button.grid(row=row, column=col, padx=5, pady=5)
+    
+    def _resetGrids(self):
+        for row in range(4):
+            for col in range(4):
+                self._cells[(row, col)].configure(image=self._photos[BLANK_TILE], text=4 * row + col)
+                self._pieces[(row, col)].configure(state=tk.ACTIVE)
+        self.currentButton.configure(image=self._photos[BLANK_TILE], text="current")
+
+    def _resetBoard(self, event):
+        self._game.resetGame()
+        self._resetGrids()
+        self._update_display(msg="Ready?")
 
     def isValidMove(self, position, nextPiece):
         if position not in range(16):
@@ -143,13 +150,13 @@ class QuartoGUI(tk.Tk):
         self._game.moveHistory.append((position, nextPiece))
 
         # place piece on board and update game state
-        self.update_cell(position)
+        self.updateCell(position)
         row, col = qutil.get2dCoords(position)
         self._game.board[row][col] = self._game.currentPiece
         self._game.availablePositions.remove(position)
 
         # set next player's piece
-        self.update_current(nextPiece)
+        self.updateCurrent(nextPiece)
         self._game.currentPiece = nextPiece
         self._game.availablePieces.remove(self._game.currentPiece)
 
@@ -157,9 +164,27 @@ class QuartoGUI(tk.Tk):
             print("Move successful")
         return True
 
+    def getPlayerMove(self, isPlayerOneTurn, isFirstMove=False):
+        if isPlayerOneTurn:
+            if self.player1IsHuman:
+                pass
+            else:
+                if isFirstMove:
+                    return self._game.pickRandomAvailablePiece()
+                return self._game.player1.makeMove(self._game.getGameState(), gui_mode=self._game.gui_mode)
+        else:
+            if self.player2IsHuman:
+                pass
+            else:
+                if isFirstMove:
+                    return self._game.pickRandomAvailablePiece()
+                return self._game.player2.makeMove(self._game.getGameState(), gui_mode=self._game.gui_mode)
+
     def play(self, event):
         isPlayerOneTurn = True
         self.display["text"] = "Player 1's turn"
+        self.startButton.bind("<ButtonPress-1>", self._resetBoard)
+        self.startButton.configure(text="Reset")
 
         # first move
         self.display2["text"] = "Pick the first piece"
@@ -167,7 +192,7 @@ class QuartoGUI(tk.Tk):
             self._game.getGameState(), gui_mode=self._game.gui_mode
         )
         self._game.makeFirstMove(firstMove)
-        self.update_current(firstMove)
+        self.updateCurrent(firstMove)
         isPlayerOneTurn = False
 
         if self._game.gui_mode:
@@ -242,31 +267,21 @@ class QuartoGUI(tk.Tk):
             self.display["text"] = "DRAW!"
             self.display2["text"] = ""
 
-    def update_current(self, piece):
+    def updateCurrent(self, piece):
         target = self.currentButton
         target.configure(image=self._photos[piece], bg="#876c3e", text="")
         piece = self._pieces[qutil.get2dCoords(piece)]
         piece.configure(state=tk.DISABLED)
-        self.takenPieces.add(piece)
 
-    def update_cell(self, position):
+    def updateCell(self, position):
         piece = self._game.currentPiece
         target = self._cells[qutil.get2dCoords(position)]
         target.configure(image=self._photos[piece], bg="#876c3e", text="")
-        self.takenCells.add(target)
-        self.currentButton.configure(image=self._photos[16], text="current")
+        self.currentButton.configure(image=self._photos[BLANK_TILE], text="current")
 
     def _update_display(self, msg, color="black"):
         self.display["text"] = msg
         self.display["fg"] = color
-
-    def reset_board(self):
-        """Reset the game's board to play again."""
-        self._initGameState()
-        self._create_board_grid()
-        self._create_piece_grid()
-        self._update_display(msg="Ready?")
-
 
 def main():
     gui = QuartoGUI()
