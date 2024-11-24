@@ -10,10 +10,10 @@ class QuartoGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Quarto Game")
-        self.player1IsHuman = True
+        self.player1IsHuman = False
         self.player2IsHuman = True
         self._game = QuartoGame(
-            quarto_agents.HumanPlayer(), quarto_agents.RandomAgent(), gui_mode=True, bin_mode=False
+            quarto_agents.HumanPlayer(), quarto_agents.HumanPlayer(), gui_mode=True, bin_mode=False
         )
 
         self._loadPhotos()
@@ -75,6 +75,7 @@ class QuartoGUI(tk.Tk):
 
     def _createBoardGrid(self):
         self._cells = {}
+        self._takenCells = set()
         grid_frame = tk.Frame(master=self, background="black", padx=20, pady=20)
         grid_frame.pack(padx=50, pady=50, side=tk.LEFT)
         for row in range(4):
@@ -95,6 +96,7 @@ class QuartoGUI(tk.Tk):
 
     def _createPieceGrid(self):
         self._pieces = {}
+        self._takenPieces = set()
         grid_frame = tk.Frame(master=self, background="#876c3e")
         grid_frame.pack(padx=50, pady=20, side=tk.LEFT)
 
@@ -113,7 +115,7 @@ class QuartoGUI(tk.Tk):
                 )
                 self._pieces[(row, col)] = button
                 button.grid(row=row, column=col, padx=5, pady=5)
-    
+
     def _resetGrids(self):
         for row in range(4):
             for col in range(4):
@@ -123,8 +125,11 @@ class QuartoGUI(tk.Tk):
 
     def _resetBoard(self, event):
         self._game.resetGame()
+        self._takenCells.clear()
+        self._takenPieces.clear()
         self._resetGrids()
         self._update_display(msg="Ready?")
+        self.play(event)
 
     def isValidMove(self, position, nextPiece):
         if position not in range(16):
@@ -180,20 +185,26 @@ class QuartoGUI(tk.Tk):
                     return self._game.pickRandomAvailablePiece()
                 return self._game.player2.makeMove(self._game.getGameState(), gui_mode=self._game.gui_mode)
 
+    def makeAgentFirstMove(self):
+        firstMove = self._game.pickRandomAvailablePiece()
+        self._game.makeFirstMove(firstMove)
+        self.updateCurrent(firstMove)
+        
+
     def play(self, event):
         isPlayerOneTurn = True
         self.display["text"] = "Player 1's turn"
+        
+        # first move
+        if not self.player1IsHuman:
+            self.toggleGridFreeze()
+            self.display2["text"] = "Agent is picking the first piece"
+            self.after(2000, self.makeAgentFirstMove)
+            self.toggleGridFreeze(toggleFreezeOn=False)
+            isPlayerOneTurn = False
+
         self.startButton.bind("<ButtonPress-1>", self._resetBoard)
         self.startButton.configure(text="Reset")
-
-        # first move
-        self.display2["text"] = "Pick the first piece"
-        firstMove = self._game.player1.makeFirstMove(
-            self._game.getGameState(), gui_mode=self._game.gui_mode
-        )
-        self._game.makeFirstMove(firstMove)
-        self.updateCurrent(firstMove)
-        isPlayerOneTurn = False
 
         if self._game.gui_mode:
             self._game.showGameState()
@@ -271,13 +282,29 @@ class QuartoGUI(tk.Tk):
         target = self.currentButton
         target.configure(image=self._photos[piece], bg="#876c3e", text="")
         piece = self._pieces[qutil.get2dCoords(piece)]
+        self._takenPieces.add(piece)
         piece.configure(state=tk.DISABLED)
 
     def updateCell(self, position):
         piece = self._game.currentPiece
         target = self._cells[qutil.get2dCoords(position)]
         target.configure(image=self._photos[piece], bg="#876c3e", text="")
+        self._takenCells.add(target)
         self.currentButton.configure(image=self._photos[BLANK_TILE], text="current")
+
+    def toggleGridFreeze(self, toggleFreezeOn=True):
+        if toggleFreezeOn:
+            for row in range(4):
+                for col in range(4):
+                    self._cells[(row, col)].configure(state=tk.DISABLED)
+                    self._pieces[(row, col)].configure(state=tk.DISABLED)
+        else:
+            for row in range(4):
+                for col in range(4):
+                    if self._cells[(row, col)] not in self._takenCells:
+                        self._cells[(row, col)].configure(state=tk.ACTIVE)
+                    if self._pieces[(row, col)] not in self._takenPieces:
+                        self._pieces[(row, col)].configure(state=tk.ACTIVE)
 
     def _update_display(self, msg, color="black"):
         self.display["text"] = msg
