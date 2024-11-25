@@ -113,8 +113,8 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
 
     def createChromosome(self, quartoGameState):
         _, availableNextPieces, availablePositions = quartoGameState
-        tempNextPieces = availableNextPieces.copy()
-        tempPositions = availablePositions.copy()
+        tempNextPieces = list(availableNextPieces)
+        tempPositions = list(availablePositions)
         chromosomeLength = self.searchDepth
 
         # generate random moves
@@ -158,9 +158,9 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
             mutationPoint = np.random.choice(pieces)
 
         if mutationPoint % 2 == 0:  # move position
-            mutation = sample(quartoGameState[2], 1)[0]
+            mutation = sample(list(quartoGameState[2]), 1)[0]
         else:  # move nextPiece
-            mutation = sample(quartoGameState[1], 1)[0]
+            mutation = sample(list(quartoGameState[1]), 1)[0]
 
         move = qutil.convertIntMoveToStr(mutation)
         mutatedChromosome = (
