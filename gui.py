@@ -94,7 +94,7 @@ class QuartoGUI(tk.Tk):
                 self.display["text"] = "Player 2 Won!"
                 self.display2["text"] = ""
             return True
-        elif self.moveCounter == 14:
+        elif self.moveCounter == 15:
             self._toggleGridFreeze()
             self.display["text"] = "DRAW!"
             self.display2["text"] = ""
