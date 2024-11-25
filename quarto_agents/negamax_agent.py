@@ -14,6 +14,7 @@ class NegamaxAgent(GenericQuartoAgent):
         self.depth = depth
         self.searchWindow = searchWindow
 
+        self.transposition = transposition
         if transposition is not None:
             self.initTransposition(transposition)
 
@@ -33,7 +34,8 @@ class NegamaxAgent(GenericQuartoAgent):
 
     def alphaBeta(self, quartoGameState, depth, alpha, beta):
         encoding, availableNextPieces, availablePositions = quartoGameState
-        self.total += 1
+        if self.transposition is not None:
+            self.total += 1
 
         if qutil.isGameOverEncoding(encoding):
             return -np.inf, (16, 16)
@@ -41,7 +43,7 @@ class NegamaxAgent(GenericQuartoAgent):
             return self.evaluation(encoding), (16, 16)
 
         # check transposition table
-        if self.tableFileName is not None:
+        if self.transposition is not None:
             if encoding in self.table.encoding.values:
                 self.hit += 1
                 row = self.table[self.table["encoding"] == encoding].values[0]
@@ -84,12 +86,12 @@ class NegamaxAgent(GenericQuartoAgent):
             availableNextPieces.add(move[1])
 
             if alpha > beta:
-                if self.tableFileName is not None and depth == self.depth:
+                if self.transposition is not None and depth == self.depth:
                     self.updateTable([encoding, maxScore, bestMove[0], bestMove[1]])
                 availableNextPieces.discard(16)
                 return alpha, bestMove
 
-        if self.tableFileName is not None and depth == self.depth:
+        if self.transposition is not None and depth == self.depth:
             self.updateTable([encoding, maxScore, bestMove[0], bestMove[1]])
         availableNextPieces.discard(16)
         return maxScore, bestMove
