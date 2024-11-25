@@ -2,7 +2,6 @@ from quarto_agents.generic_quarto_agent import GenericQuartoAgent
 import quarto_util as qutil
 import numpy as np
 from bigtree.node.node import Node
-from copy import copy
 from random import sample
 from math import factorial
 
@@ -27,8 +26,9 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
         self.mutationRate = mutationRate
         self.initialPopulationSize = initialPopulationSize
         self.maxPopulationSize = maxPopulationSize
-        self.fitness = dict()
         self.fitnessCountLimit = maxPopulationSize
+
+        self.fitness = dict()
 
     # Only used in debugging
     def makeFirstMove(self, quartoGameState, gui_mode=False):
@@ -104,8 +104,8 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
     def decodeChromosome(self, chromosome):
         movePath = [
             (
-                int(chromosome[i] + chromosome[i + 1]),
-                int(chromosome[i + 2] + chromosome[i + 3]),
+                int(chromosome[i : i + 2]),
+                int(chromosome[i + 2 : i + 4]),
             )
             for i in range(0, len(chromosome) - 3, 4)
         ]
@@ -170,7 +170,6 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
         return mutatedChromosome
 
     def isValidChromosome(self, chromosome, quartoGameState):
-        # check if chromosome is valid
         positions = [int(chromosome[i : i + 2]) for i in range(0, len(chromosome), 4)] + list(
             set(range(16)) - quartoGameState[2]
         )
@@ -186,14 +185,7 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
 
     # evaluate chromosome leaf node
     def evaluate(self, chromosome, quartoGameState):
-        movePath = [
-            (
-                int(chromosome[i] + chromosome[i + 1]),
-                int(chromosome[i + 2] + chromosome[i + 3]),
-            )
-            for i in range(0, len(chromosome) - 3, 4)
-        ]
-
+        movePath = self.decodeChromosome(chromosome)
         boardEncoding = quartoGameState[0]
         tempCurrentPiece = int(boardEncoding[-2:])
         evaluation = 0
@@ -264,7 +256,7 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
         finalEvaluation = -1
         for _ in range(self.maxGenerations):
             # perform crossover and mutation
-            parents = self.fitness.keys()
+            parents = list(self.fitness.keys())
 
             for _ in range(maxPopulationSize - np.max([len(parents), initialPopulationSize])):
                 # random parent selection
@@ -275,10 +267,8 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
                 # random mutation
                 if np.random.sample() < self.mutationRate:
                     mutatedChild = self.mutation(a, quartoGameState)
-
                     if len(mutatedChild) < 4 * self.searchDepth:
                         continue
-
                     if self.isValidChromosome(mutatedChild, quartoGameState):
                         self.fitness[mutatedChild] = 0
                         leafEvaluation = self.evaluate(mutatedChild, quartoGameState)
@@ -286,16 +276,13 @@ class GeneticMinmaxAgent(GenericQuartoAgent):
 
                     continue
 
+                # crossover
                 if a == b:
                     continue
-
-                # crossover
                 if np.random.sample() < self.crossoverRate:
                     crossoverChild = self.crossover(a, b)
-
                     if len(crossoverChild) < 4 * self.searchDepth:
                         continue
-
                     if self.isValidChromosome(crossoverChild, quartoGameState):
                         self.fitness[crossoverChild] = 0
                         leafEvaluation = self.evaluate(crossoverChild, quartoGameState)
