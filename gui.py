@@ -18,10 +18,11 @@ class QuartoGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Quarto Game")
-        self.player1IsHuman = True
-        self.player2IsHuman = False
-        self.player1 = quarto_agents.RandomAgent()
-        self.player2 = quarto_agents.NegamaxAgent(depth=2, searchWindow=64)
+        self.player1IsHuman = False
+        self.player2IsHuman = True
+        self.player1 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
+        #self.player2 = quarto_agents.NegamaxAgent(depth=2, searchWindow=64)
+        self.player2 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
         self._game = QuartoGame(self.player1, self.player2, gui_mode=True, bin_mode=False)
         self.moveCounter = 0
         self.isPlayerOneTurn = True
@@ -94,7 +95,7 @@ class QuartoGUI(tk.Tk):
                 self.display["text"] = "Player 2 Won!"
                 self.display2["text"] = ""
             return True
-        elif self.moveCounter == 15:
+        elif self.moveCounter == 16:
             self._toggleGridFreeze()
             self.display["text"] = "DRAW!"
             self.display2["text"] = ""
@@ -115,7 +116,8 @@ class QuartoGUI(tk.Tk):
             self._toggleGridFreeze(toggleFreezeOn=False)
         else:
             self._toggleGridFreeze()
-            self.display2["text"] = "Agent is placing current piece"
+            agentName = self.player1.name if self.isPlayerOneTurn else self.player2.name
+            self.display2["text"] = f"{agentName} is placing current piece"
 
         return isHumanTurn
 
@@ -249,10 +251,7 @@ class QuartoGUI(tk.Tk):
         self.placePiece(position)
         if self._checkIfGameOver():
             return
-
         self.pickNextPiece(nextPiece)
-        if self._game.gui_mode:
-            self._game.showGameState()
         self._handleMoveEnd()
 
     def play(self, event):
@@ -262,7 +261,8 @@ class QuartoGUI(tk.Tk):
             self.display2["text"] = "Pick your opponent's first piece"
         else:
             self._toggleGridFreeze()
-            self.display2["text"] = "Agent is picking the first piece"
+            agentName = self.player1.name if self.isPlayerOneTurn else self.player2.name
+            self.display2["text"] = f"{agentName} is picking the first piece"
             self.after(AGENT_DELAY_MS, self.makeAgentFirstMove)
 
         self.startButton.bind("<ButtonPress-1>", self._resetState)
