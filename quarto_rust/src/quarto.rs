@@ -1,5 +1,6 @@
 use super::quarto_agent::QuartoAgent;
 use std::collections::HashSet;
+use super::utils as qutils;
 
 const NUM_PIECES: u8 = 16;
 
@@ -44,12 +45,44 @@ impl Quarto {
         self.display_info();
     }
 
-    pub fn make_first_move(&mut self, next_piece: u8) {
+    pub fn make_first_move(&mut self, next_piece: u8) -> bool {
         if self.available_pieces.contains(&next_piece) {
             self.current_piece = next_piece;
             self.available_pieces.remove(&next_piece);
+            true
         } else {
             println!("{} does not exist!\n", next_piece);
+            false
         }
+    }
+
+    pub fn make_move(&mut self, position: u8, next_piece: u8){
+        let (row, col) = qutils::get_2d_coords(position);
+        self.board[row as usize][col as usize] = self.current_piece;
+        self.available_positions.remove(&position);
+
+        self.current_piece = next_piece;
+        self.available_pieces.remove(&self.current_piece);
+    }
+
+    pub fn make_last_move(&mut self) {
+        let last_position = self.available_positions.iter().next().unwrap().clone();
+        let (row, col) = qutils::get_2d_coords(last_position);
+        self.board[row as usize][col as usize] = self.current_piece;
+    }
+
+    pub fn is_valid_move(&self, position: u8, next_piece: u8) -> bool {
+        let mut is_valid = true;
+
+        if !self.available_pieces.contains(&next_piece) {
+            println!("This piece has already been placed or will be placed now");
+            is_valid = false;
+        }
+        if !self.available_positions.contains(&position) {
+            println!("This cell is unavailable");
+            is_valid = false;
+        }
+
+        is_valid
     }
 }

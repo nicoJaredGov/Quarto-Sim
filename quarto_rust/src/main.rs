@@ -10,5 +10,5 @@ fn main() {
     let player2 = QuartoAgent::HumanPlayer(player2);
 
     let mut quarto_game = Quarto::new(player1, player2);
-    quarto_game.display_board();
+    quarto_game.display_state();
 }
