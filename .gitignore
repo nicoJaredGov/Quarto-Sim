@@ -5,3 +5,4 @@ quarto_agents/__pycache__
 ideas.txt
 tests.py
 /experiment_results/
+*/target/
