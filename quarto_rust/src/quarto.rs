@@ -31,4 +31,25 @@ impl Quarto {
             println!("{row:?}");
         }
     }
+
+    pub fn display_info(&self) {
+        println!(
+            "current piece to place: {}\navailable pieces: {:?}\navailable positions: {:?}",
+            self.current_piece, self.available_pieces, self.available_positions,
+        )
+    }
+
+    pub fn display_state(&self) {
+        self.display_board();
+        self.display_info();
+    }
+
+    pub fn make_first_move(&mut self, next_piece: u8) {
+        if self.available_pieces.contains(&next_piece) {
+            self.current_piece = next_piece;
+            self.available_pieces.remove(&next_piece);
+        } else {
+            println!("{} does not exist!\n", next_piece);
+        }
+    }
 }
