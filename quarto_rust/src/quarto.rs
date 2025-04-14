@@ -1,6 +1,6 @@
 use super::quarto_agent::QuartoAgent;
-use std::collections::HashSet;
 use super::utils as qutils;
+use std::collections::HashSet;
 
 const NUM_PIECES: u8 = 16;
 
@@ -12,8 +12,16 @@ pub struct Quarto {
     current_piece: u8,
     available_pieces: HashSet<u8>,
     available_positions: HashSet<u8>,
-    is_player_one_turn: bool
+    is_player_one_turn: bool,
 }
+
+pub struct QuartoGameState {
+    pub board: [[u8; 4]; 4],
+    pub available_pieces: HashSet<u8>,
+    pub available_positions: HashSet<u8>,
+}
+
+pub struct QuartoMove(pub u8, pub u8);
 
 impl Quarto {
     pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Quarto {
@@ -21,11 +29,11 @@ impl Quarto {
             player_one,
             player_two,
             num_retries: 2,
-            board: [[0u8; 4]; 4],
+            board: [[16u8; 4]; 4],
             current_piece: 16,
             available_pieces: (0..NUM_PIECES).collect(),
             available_positions: (0..NUM_PIECES).collect(),
-            is_player_one_turn: true
+            is_player_one_turn: true,
         }
     }
 
@@ -40,7 +48,9 @@ impl Quarto {
         }
     }
 
-    pub fn make_move(&mut self, position: u8, next_piece: u8) -> bool{
+    pub fn make_move(&mut self, player_move: QuartoMove) -> bool {
+        let QuartoMove(position, next_piece) = player_move;
+
         if self.is_valid_move(position, next_piece) {
             let (row, col) = qutils::get_2d_coords(position);
             self.board[row as usize][col as usize] = self.current_piece;
@@ -75,8 +85,49 @@ impl Quarto {
         is_valid
     }
 
-    pub fn run(&self) {
+    pub fn get_random_piece(&self) -> u8 {
+        self.available_pieces.iter().next().unwrap().clone()
+    }
 
+    pub fn get_current_state(&self) -> QuartoGameState {
+        QuartoGameState {
+            board: self.board,
+            available_pieces: self.available_pieces.clone(),
+            available_positions: self.available_positions.clone(),
+        }
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        if qutils::is_game_over(&self.board) {
+            if self.is_player_one_turn {
+                println!("\nPlayer 1 {} won!", self.player_one.name());
+            } else {
+                println!("\nPlayer 2 {} won!", self.player_two.name());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    pub fn run(&mut self) {
+        self.make_first_move(self.get_random_piece());
+        self.display_state();
+
+        for _ in 1..16 {
+            let player_move: QuartoMove;
+            if self.is_player_one_turn {
+                player_move = self.player_one.make_move(self.get_current_state());
+            } else {
+                player_move = self.player_two.make_move(self.get_current_state());
+            }
+
+            self.make_move(player_move);
+            if self.is_game_over() {
+                return;
+            }
+            self.is_player_one_turn = !self.is_player_one_turn;
+            self.display_state();
+        }
     }
 }
 
@@ -90,7 +141,7 @@ impl Quarto {
 
     pub fn display_info(&self) {
         println!(
-            "current piece to place: {}\navailable pieces: {:?}\navailable positions: {:?}",
+            "current piece to place: {}\navailable pieces: {:?}\navailable positions: {:?}\n",
             self.current_piece, self.available_pieces, self.available_positions,
         )
     }
