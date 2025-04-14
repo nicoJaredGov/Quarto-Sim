@@ -12,6 +12,7 @@ pub struct Quarto {
     current_piece: u8,
     available_pieces: HashSet<u8>,
     available_positions: HashSet<u8>,
+    is_player_one_turn: bool
 }
 
 impl Quarto {
@@ -24,25 +25,8 @@ impl Quarto {
             current_piece: 16,
             available_pieces: (0..NUM_PIECES).collect(),
             available_positions: (0..NUM_PIECES).collect(),
+            is_player_one_turn: true
         }
-    }
-
-    pub fn display_board(&self) {
-        for row in self.board {
-            println!("{row:?}");
-        }
-    }
-
-    pub fn display_info(&self) {
-        println!(
-            "current piece to place: {}\navailable pieces: {:?}\navailable positions: {:?}",
-            self.current_piece, self.available_pieces, self.available_positions,
-        )
-    }
-
-    pub fn display_state(&self) {
-        self.display_board();
-        self.display_info();
     }
 
     pub fn make_first_move(&mut self, next_piece: u8) -> bool {
@@ -56,13 +40,18 @@ impl Quarto {
         }
     }
 
-    pub fn make_move(&mut self, position: u8, next_piece: u8){
-        let (row, col) = qutils::get_2d_coords(position);
-        self.board[row as usize][col as usize] = self.current_piece;
-        self.available_positions.remove(&position);
+    pub fn make_move(&mut self, position: u8, next_piece: u8) -> bool{
+        if self.is_valid_move(position, next_piece) {
+            let (row, col) = qutils::get_2d_coords(position);
+            self.board[row as usize][col as usize] = self.current_piece;
+            self.available_positions.remove(&position);
 
-        self.current_piece = next_piece;
-        self.available_pieces.remove(&self.current_piece);
+            self.current_piece = next_piece;
+            self.available_pieces.remove(&self.current_piece);
+            true
+        } else {
+            false
+        }
     }
 
     pub fn make_last_move(&mut self) {
@@ -84,5 +73,30 @@ impl Quarto {
         }
 
         is_valid
+    }
+
+    pub fn run(&self) {
+
+    }
+}
+
+//display methods
+impl Quarto {
+    pub fn display_board(&self) {
+        for row in self.board {
+            println!("{row:?}");
+        }
+    }
+
+    pub fn display_info(&self) {
+        println!(
+            "current piece to place: {}\navailable pieces: {:?}\navailable positions: {:?}",
+            self.current_piece, self.available_pieces, self.available_positions,
+        )
+    }
+
+    pub fn display_state(&self) {
+        self.display_board();
+        self.display_info();
     }
 }
