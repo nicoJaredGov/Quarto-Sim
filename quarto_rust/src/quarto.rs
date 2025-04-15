@@ -66,6 +66,8 @@ impl Quarto {
         let last_position = self.available_positions.iter().next().unwrap().clone();
         let (row, col) = qutils::get_2d_coords(last_position);
         self.board[row as usize][col as usize] = self.current_piece;
+        self.available_positions.remove(&last_position);
+        self.current_piece = 16;
     }
 
     pub fn is_valid_move(&self, position: u8, next_piece: u8) -> bool {
@@ -125,7 +127,12 @@ impl Quarto {
                 return;
             }
             self.is_player_one_turn = !self.is_player_one_turn;
-            
+        }
+
+        self.make_last_move();
+        self.display_state();
+        if !self.is_game_over() {
+            print!("\nDraw!")
         }
     }
 }
