@@ -32,12 +32,14 @@ pub fn is_game_over(board: &[[u8; 4]; 4]) -> bool {
 
     for i in 0..4 {
         //check horizontal lines
-        if matching_property_exists(&board[i]) && board[i][0] != 16 {
+        let line_has_empty_space = board[i].iter().any(|&x| x == 16);
+        if !line_has_empty_space && matching_property_exists(&board[i]) {
             return true;
         }
         //check vertical lines
         let col: [u8; 4] = board.map(|row| row[i]);
-        if matching_property_exists(&col) && col[0] != 16 {
+        let line_has_empty_space = col.iter().any(|&x| x == 16);
+        if !line_has_empty_space && matching_property_exists(&col) {
             return true;
         }
         //fill in diagonals
@@ -46,11 +48,13 @@ pub fn is_game_over(board: &[[u8; 4]; 4]) -> bool {
     }
 
     //check obtuse diagonal line
-    if matching_property_exists(&diag1) && diag1[0] != 16 {
+    let line_has_empty_space = diag1.iter().any(|&x| x == 16);
+    if !line_has_empty_space && matching_property_exists(&diag1) {
         return true;
     }
     //check acute diagonal line:
-    if matching_property_exists(&diag2) && diag2[0] != 16 {
+    let line_has_empty_space = diag2.iter().any(|&x| x == 16);
+    if !line_has_empty_space && matching_property_exists(&diag2) {
         return true;
     }
 

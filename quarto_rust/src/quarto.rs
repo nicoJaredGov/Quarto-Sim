@@ -7,7 +7,6 @@ const NUM_PIECES: u8 = 16;
 pub struct Quarto {
     player_one: QuartoAgent,
     player_two: QuartoAgent,
-    num_retries: u8,
     board: [[u8; 4]; 4],
     current_piece: u8,
     available_pieces: HashSet<u8>,
@@ -28,7 +27,6 @@ impl Quarto {
         Quarto {
             player_one,
             player_two,
-            num_retries: 2,
             board: [[16u8; 4]; 4],
             current_piece: 16,
             available_pieces: (0..NUM_PIECES).collect(),
@@ -122,11 +120,12 @@ impl Quarto {
             }
 
             self.make_move(player_move);
+            self.display_state();
             if self.is_game_over() {
                 return;
             }
             self.is_player_one_turn = !self.is_player_one_turn;
-            self.display_state();
+            
         }
     }
 }
