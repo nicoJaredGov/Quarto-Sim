@@ -20,8 +20,8 @@ pub fn get_linear_coords(row: u8, col: u8) -> u8 {
 pub fn matching_property_exists(line: &[u8; 4]) -> bool {
     //bitwiseAnd - checks if there is a column of 1s by getting the conjunction
     //bitwiseNot - checks if there is a column of 0s after negating all integers, masking by 15 (1111) and then getting the conjuction
-    let bitwise_and = line.iter().fold(1, |acc, item| acc & item);
-    let bitwise_not = line.iter().fold(1, |acc, item| acc & (!item & 15));
+    let bitwise_and = line.iter().fold(15, |acc, item| acc & item);
+    let bitwise_not = line.iter().fold( 15, |acc, item| acc & (!item & 15));
     let result = bitwise_and | bitwise_not;
     result > 0
 }
