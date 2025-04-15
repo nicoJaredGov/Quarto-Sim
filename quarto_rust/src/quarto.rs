@@ -102,9 +102,9 @@ impl Quarto {
     pub fn is_game_over(&self) -> bool {
         if qutils::is_game_over(&self.board) {
             if self.is_player_one_turn {
-                println!("\nPlayer 1 {} won!", self.player_one.name());
+                println!("\nPlayer 1 ({}) won!", self.player_one.name());
             } else {
-                println!("\nPlayer 2 {} won!", self.player_two.name());
+                println!("\nPlayer 2 ({}) won!", self.player_two.name());
             }
             return true;
         }
