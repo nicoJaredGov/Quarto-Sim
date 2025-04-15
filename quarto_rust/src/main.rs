@@ -1,15 +1,15 @@
 use std::collections::HashSet;
 
 use quarto_rust::quarto::Quarto;
+use quarto_rust::quarto_agent::QuartoAgent;
 use quarto_rust::quarto_agent::human_player::HumanPlayer;
 use quarto_rust::quarto_agent::random_agent::RandomAgent;
-use quarto_rust::quarto_agent::QuartoAgent;
 
 fn main() {
     let random_agent1 = QuartoAgent::new(Box::new(RandomAgent {}));
     let random_agent2 = QuartoAgent::new(Box::new(RandomAgent {}));
 
-    let mut quarto_game = Quarto::new(random_agent1, random_agent2);
+    let mut quarto_game = Quarto::new(random_agent1, random_agent2, true);
     quarto_game.display_state();
     quarto_game.run();
 
@@ -18,5 +18,4 @@ fn main() {
     //     let ans = available_pieces.iter().next().unwrap().clone();
     //     println!("{i}: {ans}");
     // }
-    
 }

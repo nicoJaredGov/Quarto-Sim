@@ -11,14 +11,16 @@ impl QuartoAgent {
     pub fn new(agent: Box<dyn Agent>) -> QuartoAgent {
         QuartoAgent { agent }
     }
-    pub fn make_move(&self, state: QuartoGameState) -> QuartoMove {
+    pub fn make_move(&self, state: QuartoGameState, show_console_logs: bool) -> QuartoMove {
         let player_move = self.agent.make_move(state);
-        println!(
-            "{} made move ({},{})\n",
-            self.agent.get_name(),
-            player_move.0,
-            player_move.1
-        );
+        if show_console_logs {
+            println!(
+                "{} made move ({},{})\n",
+                self.agent.get_name(),
+                player_move.0,
+                player_move.1
+            );
+        }
         player_move
     }
     pub fn name(&self) -> String {

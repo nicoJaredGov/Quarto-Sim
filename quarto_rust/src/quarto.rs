@@ -12,6 +12,7 @@ pub struct Quarto {
     available_pieces: HashSet<u8>,
     available_positions: HashSet<u8>,
     is_player_one_turn: bool,
+    show_console_logs: bool
 }
 
 pub struct QuartoGameState {
@@ -23,7 +24,7 @@ pub struct QuartoGameState {
 pub struct QuartoMove(pub u8, pub u8);
 
 impl Quarto {
-    pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Quarto {
+    pub fn new(player_one: QuartoAgent, player_two: QuartoAgent, show_console_logs: bool) -> Quarto {
         Quarto {
             player_one,
             player_two,
@@ -32,6 +33,7 @@ impl Quarto {
             available_pieces: (0..NUM_PIECES).collect(),
             available_positions: (0..NUM_PIECES).collect(),
             is_player_one_turn: true,
+            show_console_logs
         }
     }
 
@@ -116,9 +118,9 @@ impl Quarto {
         for _ in 1..16 {
             let player_move: QuartoMove;
             if self.is_player_one_turn {
-                player_move = self.player_one.make_move(self.get_current_state());
+                player_move = self.player_one.make_move(self.get_current_state(), self.show_console_logs);
             } else {
-                player_move = self.player_two.make_move(self.get_current_state());
+                player_move = self.player_two.make_move(self.get_current_state(), self.show_console_logs);
             }
 
             self.make_move(player_move);
@@ -132,7 +134,7 @@ impl Quarto {
         self.make_last_move();
         self.display_state();
         if !self.is_game_over() {
-            print!("\nDraw!")
+            println!("\nDraw!")
         }
     }
 }
@@ -153,7 +155,9 @@ impl Quarto {
     }
 
     pub fn display_state(&self) {
-        self.display_board();
-        self.display_info();
+        if self.show_console_logs {
+            self.display_board();
+            self.display_info();
+        }
     }
 }
