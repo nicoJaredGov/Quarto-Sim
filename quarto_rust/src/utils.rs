@@ -1,3 +1,5 @@
+use crate::quarto::QuartoGameState;
+
 pub fn convert_move_to_str(game_move: u8) -> String {
     if game_move <= 9 {
         let mut str_move = String::from("0");
@@ -16,12 +18,21 @@ pub fn get_linear_coords(row: u8, col: u8) -> u8 {
     4 * row + col
 }
 
+pub fn update_state(current_state: &mut QuartoGameState, position: u8, next_piece: u8) {
+    let (row, col) = get_2d_coords(position);
+    current_state.board[row as usize][col as usize] = current_state.current_piece;
+    current_state.available_positions.remove(&position);
+
+    current_state.current_piece = next_piece;
+    current_state.available_pieces.remove(&current_state.current_piece);
+}
+
 //Determines if there is a matching column of bits for a list of integers between 0 (inclusive) and 16 (exclusive)
 pub fn matching_property_exists(line: &[u8; 4]) -> bool {
     //bitwiseAnd - checks if there is a column of 1s by getting the conjunction
     //bitwiseNot - checks if there is a column of 0s after negating all integers, masking by 15 (1111) and then getting the conjuction
     let bitwise_and = line.iter().fold(15, |acc, item| acc & item);
-    let bitwise_not = line.iter().fold( 15, |acc, item| acc & (!item & 15));
+    let bitwise_not = line.iter().fold(15, |acc, item| acc & (!item & 15));
     let result = bitwise_and | bitwise_not;
     result > 0
 }
