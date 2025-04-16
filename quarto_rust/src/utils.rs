@@ -22,13 +22,20 @@ pub fn update_state(current_state: &mut QuartoGameState, position: u8, next_piec
     let (row, col) = get_2d_coords(position);
     current_state.board[row as usize][col as usize] = current_state.current_piece;
     current_state.available_positions.remove(&position);
-
     current_state.current_piece = next_piece;
     current_state.available_pieces.remove(&current_state.current_piece);
 }
 
+pub fn undo_state_update(current_state: &mut QuartoGameState, position: u8, next_piece: u8 ) {
+    let (row, col) = get_2d_coords(position);
+    current_state.current_piece = current_state.board[row as usize][col as usize];
+    current_state.board[row as usize][col as usize] = 16;
+    current_state.available_positions.insert(position);
+    current_state.available_pieces.insert(next_piece);
+}
+
 //Determines if there is a matching column of bits for a list of integers between 0 (inclusive) and 16 (exclusive)
-pub fn matching_property_exists(line: &[u8; 4]) -> bool {
+pub fn matching_property_exists(line: &[u8]) -> bool {
     //bitwiseAnd - checks if there is a column of 1s by getting the conjunction
     //bitwiseNot - checks if there is a column of 0s after negating all integers, masking by 15 (1111) and then getting the conjuction
     let bitwise_and = line.iter().fold(15, |acc, item| acc & item);

@@ -1,5 +1,6 @@
 pub mod human_player;
 pub mod random_agent;
+pub mod negamax_agent;
 
 use crate::quarto::{QuartoGameState, QuartoMove};
 
