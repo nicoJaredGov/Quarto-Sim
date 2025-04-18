@@ -2,7 +2,7 @@ pub mod human_player;
 pub mod random_agent;
 pub mod negamax_agent;
 
-use crate::quarto::{QuartoGameState, QuartoMove};
+use crate::quarto::{quarto_game_state::QuartoGameState, QuartoMove};
 
 pub struct QuartoAgent {
     agent: Box<dyn Agent>,

@@ -1,15 +1,10 @@
+pub mod quarto_game_state;
+pub mod game_result;
+
 use super::quarto_agent::QuartoAgent;
 use super::utils as qutils;
-use std::collections::HashSet;
-
-const NUM_PIECES: u8 = 16;
-
-pub struct QuartoGameState {
-    pub board: [[u8; 4]; 4],
-    pub current_piece: u8,
-    pub available_pieces: HashSet<u8>,
-    pub available_positions: HashSet<u8>,
-}
+use quarto_game_state::QuartoGameState;
+use game_result::GameResult;
 
 pub struct Quarto {
     player_one: QuartoAgent,
@@ -23,25 +18,6 @@ pub struct Quarto {
 
 pub struct QuartoMove(pub u8, pub u8);
 
-pub enum GameResult {
-    PlayerOneWon,
-    PlayerTwoWon,
-    Draw,
-    PlayerOneInvalid,
-    PlayerTwoInvalid,
-}
-
-impl QuartoGameState {
-    pub fn new() -> Self {
-        Self {
-            board: [[16u8; 4]; 4],
-            current_piece: 16,
-            available_pieces: (0..NUM_PIECES).collect(),
-            available_positions: (0..NUM_PIECES).collect(),
-        }
-    }
-}
-
 impl Quarto {
     pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Self {
         Self {
@@ -53,21 +29,6 @@ impl Quarto {
             log_stats: false,
             num_retries_allowed: 2,
         }
-    }
-
-    pub fn with_console_logs(&mut self) -> &mut Self {
-        self.show_console_logs = true;
-        self
-    }
-
-    pub fn with_file_logs(&mut self) -> &mut Self {
-        self.log_stats = true;
-        self
-    }
-
-    pub fn set_num_retries(&mut self, num_retries: u8) -> &mut Self {
-        self.num_retries_allowed = num_retries;
-        self
     }
 
     pub fn make_first_move(&mut self, next_piece: u8) -> bool {
@@ -191,6 +152,24 @@ impl Quarto {
             println!("\nDraw!");
             return GameResult::Draw;
         }
+    }
+}
+
+//setters 
+impl Quarto {
+    pub fn with_console_logs(&mut self) -> &mut Self {
+        self.show_console_logs = true;
+        self
+    }
+
+    pub fn with_file_logs(&mut self) -> &mut Self {
+        self.log_stats = true;
+        self
+    }
+
+    pub fn set_num_retries(&mut self, num_retries: u8) -> &mut Self {
+        self.num_retries_allowed = num_retries;
+        self
     }
 }
 

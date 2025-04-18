@@ -1,4 +1,4 @@
-use crate::quarto::QuartoGameState;
+use crate::quarto::quarto_game_state::QuartoGameState;
 
 pub fn convert_move_to_str(game_move: u8) -> String {
     if game_move <= 9 {
