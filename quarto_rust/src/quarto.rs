@@ -1,12 +1,15 @@
 pub mod game_result;
-pub mod quarto_game_state;
 pub mod game_stats;
+pub mod quarto_game_state;
 
 use super::quarto_agent::QuartoAgent;
 use super::utils as qutils;
+use chrono::{Timelike, Utc};
 use game_result::GameResult;
 use game_stats::GameStats;
 use quarto_game_state::QuartoGameState;
+use std::fs::File;
+use std::io::Write;
 use std::time::Instant;
 
 pub struct Quarto {
@@ -178,6 +181,40 @@ impl Quarto {
         } else {
             println!("\nDraw!");
             return GameResult::Draw;
+        }
+    }
+
+    pub fn run_multiple(&mut self, num_runs: u16) {
+        self.log_stats = true;
+        self.reset();
+
+        let utc = Utc::now().with_nanosecond(0).unwrap();
+        let file_datetime = utc.format("%Y-%m-%d_%H-%M-%S").to_string();
+        let filename = format!(
+            "experiment_results/runs/{} {}_{}.txt",
+            file_datetime,
+            self.player_one.name(),
+            self.player_two.name()
+        );
+        let mut log_file = File::create(filename).expect("Error creating log file");
+        log_file.write(
+            b"result,player1cumulativeTime,player2cumulativeTime,player1numMoves,player2numMoves\n"
+        ).expect("Error writing to log file");
+
+        for _ in 0..num_runs {
+            let result = self.run();
+            let log_line = format!(
+                "{},{},{},{},{}\n",
+                result,
+                self.game_stats.p1_cumulative_time,
+                self.game_stats.p2_cumulative_time,
+                self.game_stats.p1_num_moves,
+                self.game_stats.p2_num_moves,
+            );
+            log_file
+                .write(log_line.as_bytes())
+                .expect("Error writing to log file");
+            self.reset();
         }
     }
 }
