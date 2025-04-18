@@ -9,8 +9,8 @@ pub struct QuartoAgent {
 }
 
 impl QuartoAgent {
-    pub fn new(agent: Box<dyn Agent>) -> QuartoAgent {
-        QuartoAgent { agent }
+    pub fn new(agent: Box<dyn Agent>) -> Self {
+        Self { agent }
     }
     pub fn make_move(&self, state: QuartoGameState, show_console_logs: bool) -> QuartoMove {
         let player_move = self.agent.make_move(state);

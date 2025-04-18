@@ -2,7 +2,7 @@ use super::Agent;
 use crate::{quarto::QuartoMove, quarto_agent::QuartoGameState};
 use rand::Rng;
 
-pub struct RandomAgent {}
+pub struct RandomAgent;
 
 impl Agent for RandomAgent {
     fn make_first_move(&self) -> u8 {

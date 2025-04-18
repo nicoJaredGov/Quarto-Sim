@@ -17,13 +17,23 @@ pub struct Quarto {
     state: QuartoGameState,
     is_player_one_turn: bool,
     show_console_logs: bool,
+    log_stats: bool,
+    num_retries_allowed: u8,
 }
 
 pub struct QuartoMove(pub u8, pub u8);
 
+pub enum GameResult {
+    PlayerOneWon,
+    PlayerTwoWon,
+    Draw,
+    PlayerOneInvalid,
+    PlayerTwoInvalid,
+}
+
 impl QuartoGameState {
-    pub fn new() -> QuartoGameState {
-        QuartoGameState {
+    pub fn new() -> Self {
+        Self {
             board: [[16u8; 4]; 4],
             current_piece: 16,
             available_pieces: (0..NUM_PIECES).collect(),
@@ -33,18 +43,31 @@ impl QuartoGameState {
 }
 
 impl Quarto {
-    pub fn new(
-        player_one: QuartoAgent,
-        player_two: QuartoAgent,
-        show_console_logs: bool,
-    ) -> Quarto {
-        Quarto {
+    pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Self {
+        Self {
             player_one,
             player_two,
             state: QuartoGameState::new(),
             is_player_one_turn: true,
-            show_console_logs,
+            show_console_logs: false,
+            log_stats: false,
+            num_retries_allowed: 2,
         }
+    }
+
+    pub fn with_console_logs(&mut self) -> &mut Self {
+        self.show_console_logs = true;
+        self
+    }
+
+    pub fn with_file_logs(&mut self) -> &mut Self {
+        self.log_stats = true;
+        self
+    }
+
+    pub fn set_num_retries(&mut self, num_retries: u8) -> &mut Self {
+        self.num_retries_allowed = num_retries;
+        self
     }
 
     pub fn make_first_move(&mut self, next_piece: u8) -> bool {
@@ -58,15 +81,29 @@ impl Quarto {
         }
     }
 
-    pub fn make_move(&mut self, player_move: QuartoMove) -> bool {
-        let QuartoMove(position, next_piece) = player_move;
+    pub fn try_make_move(&mut self) -> bool {
+        let mut retry = 0;
+        while retry < self.num_retries_allowed {
+            let player_move = match self.is_player_one_turn {
+                true => self
+                    .player_one
+                    .make_move(self.get_current_state(), self.show_console_logs),
+                false => self
+                    .player_two
+                    .make_move(self.get_current_state(), self.show_console_logs),
+            };
+            let QuartoMove(position, next_piece) = player_move;
 
-        if self.is_valid_move(position, next_piece) {
-            qutils::update_state(&mut self.state, position, next_piece);
-            true
-        } else {
-            false
+            if self.is_valid_move(position, next_piece) {
+                qutils::update_state(&mut self.state, position, next_piece);
+                return true;
+            } else {
+                retry += 1;
+            }
         }
+
+        println!("Maximum retries exceeded - game over");
+        return false;
     }
 
     pub fn make_last_move(&mut self) {
@@ -113,44 +150,46 @@ impl Quarto {
 
     pub fn is_game_over(&self) -> bool {
         if qutils::is_game_over(&self.state.board) {
-            if self.is_player_one_turn {
-                println!("\nPlayer 1 ({}) won!", self.player_one.name());
-            } else {
-                println!("\nPlayer 2 ({}) won!", self.player_two.name());
+            match self.is_player_one_turn {
+                true => println!("\nPlayer 1 ({}) won!", self.player_one.name()),
+                false => println!("\nPlayer 2 ({}) won!", self.player_two.name()),
             }
             return true;
         }
         return false;
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> GameResult {
         self.make_first_move(self.get_random_piece());
         self.display_state();
 
         for _ in 1..16 {
-            let player_move: QuartoMove;
-            if self.is_player_one_turn {
-                player_move = self
-                    .player_one
-                    .make_move(self.get_current_state(), self.show_console_logs);
-            } else {
-                player_move = self
-                    .player_two
-                    .make_move(self.get_current_state(), self.show_console_logs);
+            if !self.try_make_move() {
+                return match self.is_player_one_turn {
+                    true => GameResult::PlayerOneInvalid,
+                    false => GameResult::PlayerTwoInvalid,
+                };
             }
-
-            self.make_move(player_move);
             self.display_state();
             if self.is_game_over() {
-                return;
+                return match self.is_player_one_turn {
+                    true => GameResult::PlayerOneWon,
+                    false => GameResult::PlayerTwoWon,
+                };
             }
             self.is_player_one_turn = !self.is_player_one_turn;
         }
 
         self.make_last_move();
         self.display_state();
-        if !self.is_game_over() {
-            println!("\nDraw!")
+        if self.is_game_over() {
+            return match self.is_player_one_turn {
+                true => GameResult::PlayerOneWon,
+                false => GameResult::PlayerTwoWon,
+            };
+        } else {
+            println!("\nDraw!");
+            return GameResult::Draw;
         }
     }
 }

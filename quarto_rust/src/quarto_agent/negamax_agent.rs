@@ -14,8 +14,8 @@ pub struct NegamaxAgent {
 }
 
 impl NegamaxAgent {
-    pub fn new(search_depth: u8, search_window: u8) -> NegamaxAgent {
-        NegamaxAgent {
+    pub fn new(search_depth: u8, search_window: u8) -> Self {
+        Self {
             search_depth,
             search_window,
         }
