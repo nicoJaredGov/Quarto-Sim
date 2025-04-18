@@ -162,7 +162,6 @@ impl Quarto {
             }
             self.display_state();
             if self.is_game_over() {
-                println!("{}", self.game_stats);
                 return match self.is_player_one_turn {
                     true => GameResult::PlayerOneWon,
                     false => GameResult::PlayerTwoWon,
