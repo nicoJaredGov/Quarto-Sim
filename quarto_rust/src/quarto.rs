@@ -1,10 +1,13 @@
-pub mod quarto_game_state;
 pub mod game_result;
+pub mod quarto_game_state;
+pub mod game_stats;
 
 use super::quarto_agent::QuartoAgent;
 use super::utils as qutils;
-use quarto_game_state::QuartoGameState;
 use game_result::GameResult;
+use game_stats::GameStats;
+use quarto_game_state::QuartoGameState;
+use std::time::Instant;
 
 pub struct Quarto {
     player_one: QuartoAgent,
@@ -13,6 +16,7 @@ pub struct Quarto {
     is_player_one_turn: bool,
     show_console_logs: bool,
     log_stats: bool,
+    game_stats: GameStats,
     num_retries_allowed: u8,
 }
 
@@ -27,6 +31,7 @@ impl Quarto {
             is_player_one_turn: true,
             show_console_logs: false,
             log_stats: false,
+            game_stats: GameStats::new(),
             num_retries_allowed: 2,
         }
     }
@@ -34,6 +39,7 @@ impl Quarto {
     pub fn reset(&mut self) {
         self.state = QuartoGameState::new();
         self.is_player_one_turn = true;
+        self.game_stats.reset();
     }
 
     pub fn make_first_move(&mut self, next_piece: u8) -> bool {
@@ -47,9 +53,20 @@ impl Quarto {
         }
     }
 
+    fn _log_move_time(&mut self, time_elapsed: u128) {
+        if self.is_player_one_turn {
+            self.game_stats.p1_cumulative_time += time_elapsed;
+            self.game_stats.p1_num_moves += 1;
+        } else {
+            self.game_stats.p2_cumulative_time += time_elapsed;
+            self.game_stats.p2_num_moves += 1;
+        }
+    }
+
     pub fn try_make_move(&mut self) -> bool {
         let mut retry = 0;
         while retry < self.num_retries_allowed {
+            let before = Instant::now();
             let player_move = match self.is_player_one_turn {
                 true => self
                     .player_one
@@ -59,9 +76,13 @@ impl Quarto {
                     .make_move(self.get_current_state(), self.show_console_logs),
             };
             let QuartoMove(position, next_piece) = player_move;
+            let elapsed = before.elapsed().as_millis();
 
             if self.is_valid_move(position, next_piece) {
                 qutils::update_state(&mut self.state, position, next_piece);
+                if self.log_stats {
+                    self._log_move_time(elapsed);
+                }
                 return true;
             } else {
                 retry += 1;
@@ -138,6 +159,7 @@ impl Quarto {
             }
             self.display_state();
             if self.is_game_over() {
+                println!("{}", self.game_stats);
                 return match self.is_player_one_turn {
                     true => GameResult::PlayerOneWon,
                     false => GameResult::PlayerTwoWon,
@@ -160,7 +182,7 @@ impl Quarto {
     }
 }
 
-//setters 
+//setters
 impl Quarto {
     pub fn with_console_logs(&mut self) -> &mut Self {
         self.show_console_logs = true;
