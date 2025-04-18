@@ -31,6 +31,11 @@ impl Quarto {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.state = QuartoGameState::new();
+        self.is_player_one_turn = true;
+    }
+
     pub fn make_first_move(&mut self, next_piece: u8) -> bool {
         if self.state.available_pieces.contains(&next_piece) {
             self.state.current_piece = next_piece;
