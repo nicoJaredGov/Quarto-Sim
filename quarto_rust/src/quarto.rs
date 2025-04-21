@@ -190,7 +190,7 @@ impl Quarto {
         let utc = Utc::now().with_nanosecond(0).unwrap();
         let file_datetime = utc.format("%Y-%m-%d_%H-%M-%S").to_string();
         let filename = format!(
-            "experiment_results/runs/{} {}_{}.txt",
+            "experiment_results/runs/{} {}_{}.csv",
             file_datetime,
             self.player_one.name(),
             self.player_two.name()
@@ -200,8 +200,19 @@ impl Quarto {
             b"result,player1cumulativeTime,player2cumulativeTime,player1numMoves,player2numMoves\n"
         ).expect("Error writing to log file");
 
+        let mut player_one_wins = 0;
+        let mut player_two_wins = 0;
+        let mut draws = 0;
+
         for _ in 0..num_runs {
             let result = self.run();
+            match result {
+                GameResult::PlayerOneWon => player_one_wins += 1,
+                GameResult::PlayerTwoWon => player_two_wins += 1,
+                GameResult::Draw => draws += 1,
+                _ => (),
+            }
+
             let log_line = format!(
                 "{},{},{},{},{}\n",
                 result,
@@ -215,6 +226,11 @@ impl Quarto {
                 .expect("Error writing to log file");
             self.reset();
         }
+
+        println!(
+            "\nPlayer 1 wins: {}\nPlayer 2 wins: {}\nDraws: {}",
+            player_one_wins, player_two_wins, draws
+        );
     }
 }
 
