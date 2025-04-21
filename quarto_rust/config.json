@@ -1,0 +1,15 @@
+{
+    "player_one": {
+        "agent_type": "human",
+        "name": "p1",
+        "search_depth": 3,
+        "search_window": 32
+    },
+    "player_two": {
+        "agent_type": "negamax",
+        "name": "p2",
+        "search_depth": 4,
+        "search_window": 16
+    },
+    "num_runs": 30
+}
