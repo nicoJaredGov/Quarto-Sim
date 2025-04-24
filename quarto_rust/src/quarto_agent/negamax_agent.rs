@@ -45,7 +45,7 @@ fn alpha_beta(
         return (MIN_EVAL, QuartoMove(16, 16));
     }
     if depth == 0 || state.available_positions.len() == 0 {
-        return (evaluation(state.board), QuartoMove(16, 16));
+        return (qutils::line_evaluation(state.board), QuartoMove(16, 16));
     }
 
     if state.available_pieces.len() == 0 {
@@ -91,42 +91,4 @@ fn alpha_beta(
 
     state.available_pieces.remove(&16);
     return (max_score, best_move);
-}
-
-//counts how many lines of three pieces with an identical property
-fn evaluation(board: [[u8; 4]; 4]) -> i32 {
-    let mut num_lines: i32 = 0;
-    let mut diag1 = Vec::new();
-    let mut diag2 = Vec::new();
-
-    for i in 0..4 {
-        //check horizontal lines
-        let row = board[i].iter().cloned().filter(|&x| x != 16).collect_vec();
-        if row.len() == 3 && qutils::matching_property_exists(&row) {
-            num_lines += 1
-        }
-        //check vertical lines
-        let col = board.map(|row| row[i]);
-        let col = col.iter().cloned().filter(|&x| x != 16).collect_vec();
-        if col.len() == 3 && qutils::matching_property_exists(&col) {
-            num_lines += 1
-        }
-        //fill in diagonals
-        if board[i][i] != 16 {
-            diag1.push(board[i][i]);
-        }
-        if board[i][3 - i] != 16 {
-            diag2.push(board[i][3 - i]);
-        }
-    }
-
-    //check obtuse diagonal line
-    if diag1.len() == 3 && qutils::matching_property_exists(&diag1) {
-        num_lines += 1
-    }
-    if diag2.len() == 3 && qutils::matching_property_exists(&diag2) {
-        num_lines += 1
-    }
-
-    num_lines
 }

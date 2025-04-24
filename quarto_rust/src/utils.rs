@@ -1,4 +1,5 @@
 use crate::quarto::quarto_game_state::QuartoGameState;
+use itertools::Itertools;
 
 pub fn convert_move_to_str(game_move: u8) -> String {
     if game_move <= 9 {
@@ -23,10 +24,12 @@ pub fn update_state(current_state: &mut QuartoGameState, position: u8, next_piec
     current_state.board[row as usize][col as usize] = current_state.current_piece;
     current_state.available_positions.remove(&position);
     current_state.current_piece = next_piece;
-    current_state.available_pieces.remove(&current_state.current_piece);
+    current_state
+        .available_pieces
+        .remove(&current_state.current_piece);
 }
 
-pub fn undo_state_update(current_state: &mut QuartoGameState, position: u8, next_piece: u8 ) {
+pub fn undo_state_update(current_state: &mut QuartoGameState, position: u8, next_piece: u8) {
     let (row, col) = get_2d_coords(position);
     current_state.current_piece = current_state.board[row as usize][col as usize];
     current_state.board[row as usize][col as usize] = 16;
@@ -78,4 +81,51 @@ pub fn is_game_over(board: &[[u8; 4]; 4]) -> bool {
 
     //no winning line found
     false
+}
+
+//counts how many lines of three pieces with an identical property
+pub fn line_evaluation(board: [[u8; 4]; 4]) -> i32 {
+    let mut num_lines: i32 = 0;
+    let mut diag1 = Vec::new();
+    let mut diag2 = Vec::new();
+
+    for i in 0..4 {
+        //check horizontal lines
+        let row = board[i].iter().cloned().filter(|&x| x != 16).collect_vec();
+        if row.len() == 3 && matching_property_exists(&row) {
+            num_lines += 1
+        }
+        //check vertical lines
+        let col = board.map(|row| row[i]);
+        let col = col.iter().cloned().filter(|&x| x != 16).collect_vec();
+        if col.len() == 3 && matching_property_exists(&col) {
+            num_lines += 1
+        }
+        //fill in diagonals
+        if board[i][i] != 16 {
+            diag1.push(board[i][i]);
+        }
+        if board[i][3 - i] != 16 {
+            diag2.push(board[i][3 - i]);
+        }
+    }
+
+    //check obtuse diagonal line
+    if diag1.len() == 3 && matching_property_exists(&diag1) {
+        num_lines += 1
+    }
+    if diag2.len() == 3 && matching_property_exists(&diag2) {
+        num_lines += 1
+    }
+
+    num_lines
+}
+
+fn factorial(n: u64) -> u64 {
+    (1..=n).product()
+}
+
+pub fn max_possible_states(num_moves: u64, search_depth: u64) -> u64 {
+    (num_moves * factorial(num_moves - 1).pow(2))
+        / ((num_moves - search_depth) * factorial(num_moves - search_depth - 1).pow(2))
 }
