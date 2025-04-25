@@ -3,29 +3,29 @@ use std::collections::HashMap;
 use super::chromosome::Chromosome;
 use crate::quarto::QuartoMove;
 
-pub struct RootNode<'a, T> {
+pub struct RootNode<'a> {
     pub value: i32,
-    pub children: Vec<&'a Node<'a, T>>,
+    pub children: Vec<&'a Node<'a>>,
 }
-pub struct Node<'a, T> {
-    pub state: &'a T,
+pub struct Node<'a> {
+    pub quarto_move: &'a QuartoMove,
     pub value: i32,
-    pub parent: &'a Node<'a, T>,
-    pub children: Vec<&'a Node<'a, T>>,
+    pub parent: &'a Node<'a>,
+    pub children: Vec<&'a Node<'a>>,
 }
 
-pub struct LeafNode<'a, T> {
-    pub state: &'a QuartoMove,
+pub struct LeafNode<'a> {
+    pub quarto_move: &'a QuartoMove,
     pub value: i32,
-    pub parent: &'a Node<'a, T>,
+    pub parent: &'a Node<'a>,
 }
 
-pub struct ReservationTree<'a, T> {
-    root: RootNode<'a, T>,
-    leaf_nodes: HashMap<&'a Chromosome, &'a LeafNode<'a, T>>,
+pub struct ReservationTree<'a> {
+    root: RootNode<'a>,
+    leaf_nodes: HashMap<&'a Chromosome, &'a LeafNode<'a>>,
 }
 
-impl<'a, T> ReservationTree<'a, T> {
+impl<'a> ReservationTree<'a> {
     pub fn new() -> Self {
         Self {
             root: RootNode {
@@ -37,6 +37,6 @@ impl<'a, T> ReservationTree<'a, T> {
     }
 
     pub fn add_path(&mut self, chromosome: &Chromosome, evalutation: i32) {
-        
+
     }
 }
