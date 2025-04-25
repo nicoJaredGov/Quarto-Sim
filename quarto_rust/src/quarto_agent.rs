@@ -1,6 +1,7 @@
 pub mod human_player;
 pub mod random_agent;
 pub mod negamax_agent;
+pub mod genetic_agent;
 
 use crate::quarto::{quarto_game_state::QuartoGameState, QuartoMove};
 

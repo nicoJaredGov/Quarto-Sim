@@ -23,6 +23,7 @@ pub struct Quarto {
     num_retries_allowed: u8,
 }
 
+#[derive(Eq, Hash, PartialEq)]
 pub struct QuartoMove(pub u8, pub u8);
 
 impl Quarto {
