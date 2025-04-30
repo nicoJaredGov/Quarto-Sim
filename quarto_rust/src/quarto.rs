@@ -12,7 +12,7 @@ use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 
-pub struct Quarto {
+pub struct QuartoSimulator {
     player_one: QuartoAgent,
     player_two: QuartoAgent,
     state: QuartoGameState,
@@ -23,10 +23,10 @@ pub struct Quarto {
     num_retries_allowed: u8,
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub struct QuartoMove(pub u8, pub u8);
 
-impl Quarto {
+impl QuartoSimulator {
     pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Self {
         Self {
             player_one,
@@ -236,7 +236,7 @@ impl Quarto {
 }
 
 //setters
-impl Quarto {
+impl QuartoSimulator {
     pub fn with_console_logs(&mut self) -> &mut Self {
         self.show_console_logs = true;
         self
@@ -254,7 +254,7 @@ impl Quarto {
 }
 
 //display methods
-impl Quarto {
+impl QuartoSimulator {
     pub fn display_board(&self) {
         for row in self.state.board {
             println!("{row:?}");
