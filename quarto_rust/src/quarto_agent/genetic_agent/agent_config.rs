@@ -1,8 +1,8 @@
 pub struct GeneticMinmaxConfig {
     pub search_depth: u8,
     pub max_generations: u8,
-    pub crossover_rate: f32,
-    pub mutation_rate: f32,
+    pub crossover_rate: f64,
+    pub mutation_rate: f64,
     pub initial_population_size: u16,
     pub max_population_size: u16,
 }

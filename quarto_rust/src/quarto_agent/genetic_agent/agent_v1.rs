@@ -1,10 +1,16 @@
+use rand::seq::IteratorRandom;
+use rand::{Rng, seq::SliceRandom};
 use std::collections::HashMap;
-use rand::{seq::SliceRandom, Rng};
 
-use crate::{quarto::QuartoMove, quarto_agent::{Agent, QuartoGameState}};
-use super::{agent_config::GeneticMinmaxConfig, chromosome::ChromosomeId, reservation_tree::{self, ReservationTree}};
 use super::chromosome::Chromosome;
+use super::{
+    agent_config::GeneticMinmaxConfig, chromosome::ChromosomeId, reservation_tree::ReservationTree,
+};
 use crate::utils as qutils;
+use crate::{
+    quarto::QuartoMove,
+    quarto_agent::{Agent, QuartoGameState},
+};
 
 pub struct GeneticMinmaxAgent {
     config: GeneticMinmaxConfig,
@@ -40,34 +46,70 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
     //randomize initial population
     for id in 0..config.initial_population_size {
         let chromosome = gen_random_chromosome(&state, config.search_depth);
-        let evaluation = evaluate_chromosome(&chromosome, &state);
         let chromosome_id = ChromosomeId(id);
-
-        chromosomes.insert(chromosome_id.clone(), chromosome);
-        fitness.entry(chromosome_id.clone()).or_insert(0);
-        reservation_tree.add_path(chromosome_id.clone(), evaluation, &chromosomes);
+        add_chromosome(
+            chromosome,
+            &mut chromosomes,
+            &mut fitness,
+            &mut reservation_tree,
+            &state,
+            chromosome_id,
+        );
     }
 
+    //genetic evolution
     for _ in 0..config.max_generations {
-        let parents = chromosomes.keys();
-        let parents_len = parents.len() as u16;
+        let parents_len = chromosomes.len() as u16;
         if parents_len < 2 {
-            break
+            break;
         }
+
         let limit = config.max_population_size - parents_len.max(config.initial_population_size);
+        let mut rng = rand::rng();
 
         for id in parents_len..limit {
             //random mutation
+            let parent_one = chromosomes.values().choose(&mut rng).unwrap();
+            if rand::random::<f64>() < config.mutation_rate {
+                let mutated_child = parent_one.mutation(&state);
+                let chromosome_id = ChromosomeId(id);
+                add_chromosome(
+                    mutated_child,
+                    &mut chromosomes,
+                    &mut fitness,
+                    &mut reservation_tree,
+                    &state,
+                    chromosome_id,
+                );
+
+                continue;
+            }
 
             //crossover
+            let parent_two = chromosomes.values().choose(&mut rng).unwrap();
+            if parent_one == parent_two {
+                continue;
+            }
+            if rand::random::<f64>() < config.crossover_rate {
+                let crossover_child = parent_one.crossover(parent_two);
+                if let Some(child) = crossover_child {
+                    let chromosome_id = ChromosomeId(id);
+                    add_chromosome(
+                        child,
+                        &mut chromosomes,
+                        &mut fitness,
+                        &mut reservation_tree,
+                        &state,
+                        chromosome_id,
+                    );
+                }
+            }
         }
 
         //update fitness for all chromosomes in this generation
 
         //set next generation's initial population to top N chromosomes of current generation
-        
     }
-
 
     QuartoMove(16, 16)
 }
@@ -82,7 +124,7 @@ fn gen_random_chromosome(state: &QuartoGameState, search_depth: u8) -> Chromosom
     let mut rng = rand::rng();
     next_positions.shuffle(&mut rng);
     next_pieces.shuffle(&mut rng);
-    
+
     if next_pieces.len() < search_depth.into() {
         next_pieces.push(16);
         chromosome_length = state.available_positions.len();
@@ -104,12 +146,26 @@ fn evaluate_chromosome(chromosome: &Chromosome, state: &QuartoGameState) -> i32 
         qutils::update_state(&mut temp_state, *position, *next_piece);
 
         if qutils::is_game_over(&temp_state.board) {
-            return if my_turn {10} else {-10};
+            return if my_turn { 10 } else { -10 };
         }
 
         my_turn = !my_turn;
     }
 
     let line_eval = qutils::line_evaluation(temp_state.board);
-    return if my_turn {line_eval} else {-line_eval};
+    return if my_turn { line_eval } else { -line_eval };
+}
+
+fn add_chromosome(
+    chromosome: Chromosome,
+    chromosomes: &mut HashMap<ChromosomeId, Chromosome>,
+    fitness: &mut HashMap<ChromosomeId, u8>,
+    reservation_tree: &mut ReservationTree,
+    state: &QuartoGameState,
+    chromosome_id: ChromosomeId,
+) {
+    let evaluation = evaluate_chromosome(&chromosome, &state);
+    chromosomes.insert(chromosome_id.clone(), chromosome);
+    fitness.entry(chromosome_id.clone()).or_insert(0);
+    reservation_tree.add_path(chromosome_id, evaluation, &chromosomes);
 }
