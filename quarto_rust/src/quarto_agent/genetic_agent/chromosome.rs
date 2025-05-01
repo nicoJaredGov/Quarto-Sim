@@ -1,4 +1,4 @@
-use rand::seq::{IndexedMutRandom, IteratorRandom};
+use rand::{seq::{IndexedMutRandom, IteratorRandom}, Rng};
 
 use crate::quarto::{QuartoMove, quarto_game_state::QuartoGameState};
 
@@ -16,9 +16,23 @@ impl Chromosome {
         &self.movepath
     }
 
-    pub fn crossover(&self, other: &Chromosome) -> Chromosome {
+    pub fn crossover(&self, other: &Chromosome) -> Self {
+        let mut num_moves = self.movepath.len();
+        if other.movepath.len() < num_moves {
+            num_moves = other.movepath.len();
+        }
+        if num_moves < 2 {
+            return self.clone();
+        }
+
+        let point = rand::rng().random_range(1..num_moves);
+        let mut new_path = self.movepath[..point].to_vec();
+        new_path.extend_from_slice(&other.movepath[point..]);
+
+        println!("cross at {point}  {:?}", new_path);
+
         Chromosome {
-            movepath: Vec::new(),
+            movepath: new_path,
         }
     }
 
