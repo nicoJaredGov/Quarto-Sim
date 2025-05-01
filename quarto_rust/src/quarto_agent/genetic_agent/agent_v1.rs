@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use rand::{seq::SliceRandom, Rng};
 
 use crate::{quarto::QuartoMove, quarto_agent::{Agent, QuartoGameState}};
-use super::agent_config::GeneticMinmaxConfig;
+use super::{agent_config::GeneticMinmaxConfig, chromosome::ChromosomeId, reservation_tree::{self, ReservationTree}};
 use super::chromosome::Chromosome;
 use crate::utils as qutils;
 
@@ -32,15 +32,42 @@ impl Agent for GeneticMinmaxAgent {
 }
 
 fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoMove {
-    //initialize reservation tree
+    //initialization
+    let mut reservation_tree = ReservationTree::new();
+    let mut chromosomes: HashMap<ChromosomeId, Chromosome> = HashMap::new();
+    let mut fitness: HashMap<ChromosomeId, u8> = HashMap::new();
 
     //randomize initial population
-    let mut fitness: HashMap<Chromosome, u8> = HashMap::new();
-    for _ in 0..config.initial_population_size {
+    for id in 0..config.initial_population_size {
         let chromosome = gen_random_chromosome(&state, config.search_depth);
         let evaluation = evaluate_chromosome(&chromosome, &state);
-        fitness.entry(chromosome).or_insert(0);
+        let chromosome_id = ChromosomeId(id);
+
+        chromosomes.insert(chromosome_id.clone(), chromosome);
+        fitness.entry(chromosome_id.clone()).or_insert(0);
+        reservation_tree.add_path(chromosome_id.clone(), evaluation, &chromosomes);
     }
+
+    for _ in 0..config.max_generations {
+        let parents = chromosomes.keys();
+        let parents_len = parents.len() as u16;
+        if parents_len < 2 {
+            break
+        }
+        let limit = config.max_population_size - parents_len.max(config.initial_population_size);
+
+        for id in parents_len..limit {
+            //random mutation
+
+            //crossover
+        }
+
+        //update fitness for all chromosomes in this generation
+
+        //set next generation's initial population to top N chromosomes of current generation
+        
+    }
+
 
     QuartoMove(16, 16)
 }

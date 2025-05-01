@@ -1,6 +1,6 @@
 use crate::quarto::{quarto_game_state::QuartoGameState, QuartoMove};
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub struct Chromosome {
     movepath: Vec<QuartoMove>,
 }
@@ -24,3 +24,6 @@ impl Chromosome {
         true
     }
 }
+
+#[derive(Eq, Hash, PartialEq, Clone)]
+pub struct ChromosomeId(pub u16);

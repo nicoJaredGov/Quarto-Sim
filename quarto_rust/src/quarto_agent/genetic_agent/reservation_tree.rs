@@ -3,15 +3,18 @@ use std::{
     rc::Rc,
 };
 
-use super::{chromosome::Chromosome, node::Node};
+use super::{
+    chromosome::{Chromosome, ChromosomeId},
+    node::Node,
+};
 
-pub struct ReservationTree<'a> {
+pub struct ReservationTree {
     root: Rc<Node>,
-    leaf_nodes: HashMap<&'a Chromosome, Rc<Node>>,
+    leaf_nodes: HashMap<ChromosomeId, Rc<Node>>,
     unique_evals: HashSet<i32>,
 }
 
-impl<'a> ReservationTree<'a> {
+impl ReservationTree {
     pub fn new() -> Self {
         Self {
             root: Node::new(),
@@ -28,13 +31,19 @@ impl<'a> ReservationTree<'a> {
                 Some(next_node) => {
                     current_node = Rc::clone(&next_node);
                     current_node.calculate_value();
-                },
+                }
                 None => break,
             }
         }
     }
 
-    pub fn add_path(&mut self, chromosome: &'a Chromosome, evaluation: i32) {
+    pub fn add_path(
+        &mut self,
+        chromosome_id: ChromosomeId,
+        evaluation: i32,
+        chromosomes: &HashMap<ChromosomeId, Chromosome>,
+    ) {
+        let chromosome = chromosomes.get(&chromosome_id).unwrap();
         let movepath = chromosome.get_movepath();
         let mut current_node = Rc::clone(&self.root);
         let mut end_found = false;
@@ -56,13 +65,15 @@ impl<'a> ReservationTree<'a> {
                 current_node = node.unwrap();
             }
         }
+
         self.unique_evals.insert(evaluation);
         self.minmax(Rc::clone(&current_node));
-        self.leaf_nodes.insert(chromosome, Rc::clone(&current_node));
+        self.leaf_nodes
+            .insert(chromosome_id, Rc::clone(&current_node));
     }
 
-    pub fn compute_fitness(&mut self, chromosome: &'a Chromosome) -> u8 {
-        let leaf_node = self.leaf_nodes.get(chromosome);
+    pub fn compute_fitness(&mut self, chromosome_id: ChromosomeId) -> u8 {
+        let leaf_node = self.leaf_nodes.get(&chromosome_id);
         let mut fitness: u8 = 0;
 
         if let Some(leaf) = leaf_node {
@@ -78,13 +89,12 @@ impl<'a> ReservationTree<'a> {
                             break;
                         }
                         current_node = Rc::clone(&next_node);
-                        
-                    },
+                    }
                     None => break,
                 }
             }
-        } 
+        }
 
         fitness
-    }   
+    }
 }
