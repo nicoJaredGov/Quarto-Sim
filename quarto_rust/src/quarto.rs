@@ -1,12 +1,14 @@
 pub mod game_result;
 pub mod game_stats;
 pub mod quarto_game_state;
+pub mod quarto_move;
 
 use super::quarto_agent::QuartoAgent;
 use super::utils as qutils;
 use chrono::{Timelike, Utc};
 use game_result::GameResult;
 use game_stats::GameStats;
+use quarto_move::QuartoMove;
 use quarto_game_state::QuartoGameState;
 use std::fs::File;
 use std::io::Write;
@@ -23,8 +25,7 @@ pub struct QuartoSimulator {
     num_retries_allowed: u8,
 }
 
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
-pub struct QuartoMove(pub u8, pub u8);
+
 
 impl QuartoSimulator {
     pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Self {

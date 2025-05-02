@@ -2,11 +2,11 @@ use rand::{
     Rng,
     seq::{IndexedMutRandom, IteratorRandom},
 };
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt};
 
-use crate::quarto::{QuartoMove, quarto_game_state::QuartoGameState};
+use crate::quarto::{quarto_game_state::QuartoGameState, quarto_move::QuartoMove};
 
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub struct Chromosome {
     movepath: Vec<QuartoMove>,
 }
@@ -33,7 +33,6 @@ impl Chromosome {
         let mut new_path = self.movepath[..point].to_vec();
         new_path.extend_from_slice(&other.movepath[point..]);
 
-        println!("cross at {point}  {:?}", new_path);
         Some(Chromosome::new(new_path))
     }
 
@@ -84,6 +83,15 @@ impl Chromosome {
         }
 
         return true;
+    }
+}
+
+impl fmt::Display for Chromosome {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for quarto_move in self.movepath.iter() {
+            write!(f, "{}", quarto_move)?;
+        }
+        Ok(())
     }
 }
 

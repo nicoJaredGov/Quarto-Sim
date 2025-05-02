@@ -1,5 +1,5 @@
 use super::chromosome::ChromosomeId;
-use crate::quarto::QuartoMove;
+use crate::quarto::quarto_move::QuartoMove;
 
 use std::{
     cell::RefCell,

@@ -4,7 +4,7 @@ use std::{cmp, i32};
 
 use super::Agent;
 use crate::utils as qutils;
-use crate::{quarto::QuartoMove, quarto_agent::QuartoGameState};
+use crate::{quarto::quarto_move::QuartoMove, quarto_agent::QuartoGameState};
 
 const MIN_EVAL: i32 = -1000;
 

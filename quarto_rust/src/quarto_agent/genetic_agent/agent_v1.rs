@@ -8,7 +8,7 @@ use super::{
 };
 use crate::utils as qutils;
 use crate::{
-    quarto::QuartoMove,
+    quarto::quarto_move::QuartoMove,
     quarto_agent::{Agent, QuartoGameState},
 };
 

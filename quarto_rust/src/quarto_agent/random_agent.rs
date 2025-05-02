@@ -1,5 +1,5 @@
 use super::Agent;
-use crate::{quarto::QuartoMove, quarto_agent::QuartoGameState};
+use crate::{quarto::quarto_move::QuartoMove, quarto_agent::QuartoGameState};
 use rand::Rng;
 
 pub struct RandomAgent;
