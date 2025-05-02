@@ -41,7 +41,7 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
     //initialization
     let mut reservation_tree = ReservationTree::new();
     let mut chromosomes: HashMap<ChromosomeId, Chromosome> = HashMap::new();
-    let mut fitness: HashMap<ChromosomeId, u8> = HashMap::new();
+    let mut fitness: HashMap<ChromosomeId, i32> = HashMap::new();
 
     //randomize initial population
     for id in 0..config.initial_population_size {
@@ -58,44 +58,46 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
     }
 
     //genetic evolution
+    let mut best_chromosome_id = ChromosomeId(0);
     for _ in 0..config.max_generations {
-        let parents_len = chromosomes.len() as u16;
+        //fitness contains reference to chromosomes in the current gen
+        let parents_len = fitness.len() as u16;
         if parents_len < 2 {
             break;
         }
-
+        let num_chromosomes = chromosomes.len() as u16;
         let limit = config.max_population_size - parents_len.max(config.initial_population_size);
         let mut rng = rand::rng();
 
-        for id in parents_len..limit {
+        //perform mutations and crossovers
+        for id in num_chromosomes..(limit + num_chromosomes) {
             //random mutation
-            let parent_one = chromosomes.values().choose(&mut rng).unwrap();
+            let parent_one = fitness.keys().choose(&mut rng).unwrap();
+            let parent_one = chromosomes.get(parent_one).unwrap();
             if rand::random::<f64>() < config.mutation_rate {
-                let mutated_child = parent_one.mutation(&state);
-                let chromosome_id = ChromosomeId(id);
+                let chromosome_id = ChromosomeId(parents_len + id);
                 add_chromosome(
-                    mutated_child,
+                    parent_one.mutation(&state),
                     &mut chromosomes,
                     &mut fitness,
                     &mut reservation_tree,
                     &state,
                     chromosome_id,
                 );
-
                 continue;
             }
 
             //crossover
-            let parent_two = chromosomes.values().choose(&mut rng).unwrap();
+            let parent_two = fitness.keys().choose(&mut rng).unwrap();
+            let parent_two = chromosomes.get(parent_two).unwrap();
             if parent_one == parent_two {
                 continue;
             }
             if rand::random::<f64>() < config.crossover_rate {
-                let crossover_child = parent_one.crossover(parent_two);
-                if let Some(child) = crossover_child {
-                    let chromosome_id = ChromosomeId(id);
+                if let Some(crossover_child) = parent_one.crossover(parent_two) {
+                    let chromosome_id = ChromosomeId(parents_len + id);
                     add_chromosome(
-                        child,
+                        crossover_child,
                         &mut chromosomes,
                         &mut fitness,
                         &mut reservation_tree,
@@ -107,11 +109,25 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
         }
 
         //update fitness for all chromosomes in this generation
+        reservation_tree.update_fitness(&mut fitness, config.max_population_size.into());
 
         //set next generation's initial population to top N chromosomes of current generation
+        best_chromosome_id = fitness
+            .iter()
+            .max_by_key(|entry| entry.1)
+            .unwrap()
+            .0
+            .clone();
     }
 
-    QuartoMove(16, 16)
+    let best_move = chromosomes
+        .get(&best_chromosome_id)
+        .unwrap()
+        .get_movepath()
+        .first()
+        .unwrap()
+        .clone();
+    best_move 
 }
 
 //todo v2: consider making this fast by doing completely random, even invalid moves - then check if valid afterwards
@@ -159,7 +175,7 @@ fn evaluate_chromosome(chromosome: &Chromosome, state: &QuartoGameState) -> i32 
 fn add_chromosome(
     chromosome: Chromosome,
     chromosomes: &mut HashMap<ChromosomeId, Chromosome>,
-    fitness: &mut HashMap<ChromosomeId, u8>,
+    fitness: &mut HashMap<ChromosomeId, i32>,
     reservation_tree: &mut ReservationTree,
     state: &QuartoGameState,
     chromosome_id: ChromosomeId,

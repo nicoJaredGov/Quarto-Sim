@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
 };
+use itertools::Itertools;
 
 use super::{
     chromosome::{Chromosome, ChromosomeId},
@@ -10,7 +11,6 @@ use super::{
 
 pub struct ReservationTree {
     root: Rc<Node>,
-    leaf_nodes: HashMap<ChromosomeId, Rc<Node>>,
     unique_evals: HashSet<i32>,
 }
 
@@ -18,7 +18,6 @@ impl ReservationTree {
     pub fn new() -> Self {
         Self {
             root: Node::new(),
-            leaf_nodes: HashMap::new(),
             unique_evals: HashSet::new(),
         }
     }
@@ -66,35 +65,40 @@ impl ReservationTree {
             }
         }
 
+        current_node.associate_chromosome(chromosome_id.clone());
         self.unique_evals.insert(evaluation);
         self.minmax(Rc::clone(&current_node));
-        self.leaf_nodes
-            .insert(chromosome_id, Rc::clone(&current_node));
     }
 
-    pub fn compute_fitness(&mut self, chromosome_id: ChromosomeId) -> u8 {
-        let leaf_node = self.leaf_nodes.get(&chromosome_id);
-        let mut fitness: u8 = 0;
-
-        if let Some(leaf) = leaf_node {
-            let leaf_value = *leaf.value.borrow();
-            let mut current_node = Rc::clone(leaf);
-
-            loop {
-                let parent = current_node.parent.borrow().upgrade();
-                match parent {
-                    Some(next_node) => {
-                        if next_node.value.borrow().clone() != leaf_value {
-                            fitness = 16 - current_node.depth;
-                            break;
-                        }
-                        current_node = Rc::clone(&next_node);
-                    }
-                    None => break,
-                }
+    fn recursive_fitness(
+        &self,
+        fitness: &mut HashMap<ChromosomeId, i32>,
+        count_limit: usize,
+        node: Rc<Node>,
+        evaluation: i32,
+    ) {
+        if fitness.len() >= count_limit {
+            return;
+        }
+        let chromosome_id = (*node.chromosome_id.borrow()).clone();
+        if let Some(chromosome_id) = chromosome_id {
+            fitness.insert(chromosome_id, evaluation);
+        } else {
+            for child in node
+                .children
+                .borrow()
+                .values()
+                .filter(|node| *node.value.borrow() == evaluation)
+            {
+                self.recursive_fitness(fitness, count_limit, Rc::clone(child), evaluation);
             }
         }
+    }
 
-        fitness
+    pub fn update_fitness(&self, fitness: &mut HashMap<ChromosomeId, i32>, count_limit: usize) {
+        fitness.clear();
+        for eval in self.unique_evals.iter().sorted().rev() {
+            self.recursive_fitness(fitness, count_limit, Rc::clone(&self.root), *eval);
+        }
     }
 }
