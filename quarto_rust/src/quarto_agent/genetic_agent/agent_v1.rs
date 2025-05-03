@@ -127,7 +127,7 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
         .first()
         .unwrap()
         .clone();
-    best_move 
+    best_move
 }
 
 //todo v2: consider making this fast by doing completely random, even invalid moves - then check if valid afterwards
@@ -146,30 +146,26 @@ fn gen_random_chromosome(state: &QuartoGameState, search_depth: u8) -> Chromosom
         chromosome_length = state.available_positions.len();
     }
 
-    let mut movepath: Vec<QuartoMove> = Vec::new();
-    for i in 0..chromosome_length {
-        movepath.push(QuartoMove(next_positions[i], next_pieces[i]));
-    }
-
+    let movepath: Vec<QuartoMove> = (0..chromosome_length)
+        .map(|i| QuartoMove(next_positions[i], next_pieces[i]))
+        .collect();
     Chromosome::new(movepath)
 }
 
 fn evaluate_chromosome(chromosome: &Chromosome, state: &QuartoGameState) -> i32 {
     let mut temp_state = state.clone();
-    let mut my_turn = true;
+    let mut my_turn = false;
 
     for QuartoMove(position, next_piece) in chromosome.get_movepath() {
+        my_turn = !my_turn;
         qutils::update_state(&mut temp_state, *position, *next_piece);
-
         if qutils::is_game_over(&temp_state.board) {
             return if my_turn { 10 } else { -10 };
         }
-
-        my_turn = !my_turn;
     }
 
     let line_eval = qutils::line_evaluation(temp_state.board);
-    return if my_turn { line_eval } else { -line_eval };
+    return if my_turn { -line_eval } else { line_eval };
 }
 
 fn add_chromosome(
