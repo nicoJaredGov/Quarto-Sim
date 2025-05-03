@@ -38,9 +38,9 @@ impl Chromosome {
 
     pub fn mutation(&self, state: &QuartoGameState) -> Self {
         let mut mutated_chromosome = self.clone();
-
         let mut rng = rand::rng();
         let quarto_move = mutated_chromosome.movepath.choose_mut(&mut rng).unwrap();
+        
         //mutate position
         if rand::random::<f64>() < 0.8 {
             let random_position = state.available_positions.iter().choose(&mut rng);

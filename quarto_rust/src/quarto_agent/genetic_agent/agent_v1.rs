@@ -31,8 +31,8 @@ impl Agent for GeneticMinmaxAgent {
     }
     fn get_name(&self) -> String {
         format!(
-            "Genetic-{}-{}",
-            self.config.search_depth, self.config.max_generations
+            "Genetic-{}-{}-{}",
+            self.config.search_depth, self.config.max_generations, self.config.max_population_size,
         )
     }
 }
@@ -112,22 +112,16 @@ fn generate_sol(config: &GeneticMinmaxConfig, state: QuartoGameState) -> QuartoM
         reservation_tree.update_fitness(&mut fitness, config.max_population_size.into());
 
         //set next generation's initial population to top N chromosomes of current generation
-        best_chromosome_id = fitness
-            .iter()
-            .max_by_key(|entry| entry.1)
-            .unwrap()
-            .0
-            .clone();
+        let max_fitness_id = fitness.iter().max_by_key(|entry| entry.1);
+        best_chromosome_id = max_fitness_id.unwrap().0.clone();
     }
-
+    
     let best_move = chromosomes
         .get(&best_chromosome_id)
         .unwrap()
         .get_movepath()
-        .first()
-        .unwrap()
-        .clone();
-    best_move
+        .first();
+    best_move.unwrap().clone()
 }
 
 //todo v2: consider making this fast by doing completely random, even invalid moves - then check if valid afterwards
