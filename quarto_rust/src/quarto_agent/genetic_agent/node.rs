@@ -50,23 +50,12 @@ impl Node {
         }
 
         let mut val_ref = self.value.borrow_mut();
-        match is_max {
-            true => {
-                *val_ref = *children_ref
-                    .values()
-                    .max_by_key(|x| x.value.clone())
-                    .unwrap()
-                    .value
-                    .borrow()
-            }
-            false => {
-                *val_ref = *children_ref
-                    .values()
-                    .min_by_key(|x| x.value.clone())
-                    .unwrap()
-                    .value
-                    .borrow()
-            }
-        }
+        let selected = if is_max {
+            children_ref.values().max_by_key(|x| x.value.clone())
+        } else {
+            children_ref.values().min_by_key(|x| x.value.clone())
+        };
+
+        *val_ref = *selected.unwrap().value.borrow();
     }
 }
