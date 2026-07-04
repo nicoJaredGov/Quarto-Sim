@@ -5,12 +5,10 @@ pub mod quarto_move;
 
 use super::quarto_agent::QuartoAgent;
 use super::utils as qutils;
-use chrono::{Timelike, Utc};
 use game_result::GameResult;
 use game_stats::GameStats;
 use quarto_game_state::QuartoGameState;
 use quarto_move::QuartoMove;
-use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 
@@ -70,7 +68,8 @@ impl QuartoSimulator {
         let mut retry = 0;
         while retry < self.num_retries_allowed {
             let before = Instant::now();
-            let player_move = match self.is_player_one_turn {
+
+            let QuartoMove(position, next_piece) = match self.is_player_one_turn {
                 true => self
                     .player_one
                     .make_move(self.get_current_state(), self.show_console_logs),
@@ -78,17 +77,18 @@ impl QuartoSimulator {
                     .player_two
                     .make_move(self.get_current_state(), self.show_console_logs),
             };
-            let QuartoMove(position, next_piece) = player_move;
+
             let elapsed = before.elapsed().as_millis();
 
-            if self.is_valid_move(position, next_piece) {
-                qutils::update_state(&mut self.state, position, next_piece);
-                if self.log_stats {
-                    self._log_move_time(elapsed);
+            match self.is_valid_move(position, next_piece) {
+                true => {
+                    qutils::update_state(&mut self.state, position, next_piece);
+                    if self.log_stats {
+                        self._log_move_time(elapsed);
+                    }
+                    return true;
                 }
-                return true;
-            } else {
-                retry += 1;
+                false => retry += 1,
             }
         }
 
@@ -101,7 +101,7 @@ impl QuartoSimulator {
             .state
             .available_positions
             .iter()
-            .next()
+            .last()
             .unwrap()
             .clone();
         let (row, col) = qutils::get_2d_coords(last_position);
@@ -160,18 +160,22 @@ impl QuartoSimulator {
                     false => GameResult::PlayerTwoInvalid,
                 };
             }
+
             self.display_state();
+
             if self.is_game_over() {
                 return match self.is_player_one_turn {
                     true => GameResult::PlayerOneWon,
                     false => GameResult::PlayerTwoWon,
                 };
             }
+
             self.is_player_one_turn = !self.is_player_one_turn;
         }
 
         self.make_last_move();
         self.display_state();
+
         if self.is_game_over() {
             return match self.is_player_one_turn {
                 true => GameResult::PlayerOneWon,
@@ -187,15 +191,12 @@ impl QuartoSimulator {
         self.log_stats = true;
         self.reset();
 
-        let utc = Utc::now().with_nanosecond(0).unwrap();
-        let file_datetime = utc.format("%Y-%m-%d_%H-%M-%S").to_string();
-        let filename = format!(
-            "experiment_results/runs/{} {}_{}.csv",
-            file_datetime,
-            self.player_one.name(),
-            self.player_two.name()
+        let mut log_file = qutils::create_timestamped_log_file(
+            "experimental_results/runs/",
+            &self.player_one.name(),
+            &self.player_two.name(),
         );
-        let mut log_file = File::create(filename).expect("Error creating log file");
+
         log_file.write(
             b"result,player1cumulativeTime,player2cumulativeTime,player1numMoves,player2numMoves\n"
         ).expect("Error writing to log file");
@@ -221,9 +222,11 @@ impl QuartoSimulator {
                 self.game_stats.p1_num_moves,
                 self.game_stats.p2_num_moves,
             );
+
             log_file
                 .write(log_line.as_bytes())
                 .expect("Error writing to log file");
+
             self.reset();
         }
 

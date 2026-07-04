@@ -1,3 +1,6 @@
+use chrono::{Timelike, Utc};
+use std::fs::File;
+
 use crate::quarto::quarto_game_state::QuartoGameState;
 use itertools::Itertools;
 
@@ -128,4 +131,20 @@ fn factorial(n: u64) -> u64 {
 pub fn max_possible_states(num_moves: u64, search_depth: u64) -> u64 {
     (num_moves * factorial(num_moves - 1).pow(2))
         / ((num_moves - search_depth) * factorial(num_moves - search_depth - 1).pow(2))
+}
+
+pub fn create_timestamped_log_file(
+    dir_path: &str,
+    player_one_name: &str,
+    player_two_name: &str,
+) -> File {
+    let utc = Utc::now().with_nanosecond(0).unwrap();
+    let file_datetime = utc.format("%Y-%m-%d_%H-%M-%S").to_string();
+
+    let filename = format!(
+        "{}{} {}_{}.csv",
+        dir_path, file_datetime, player_one_name, player_two_name
+    );
+
+    File::create(filename).expect("Error creating log file")
 }
