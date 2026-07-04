@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use config::{PlayerConfig, QuartoSimConfig};
-use quarto_rust::quarto::Quarto;
+use quarto_rust::quarto::QuartoSimulator;
 use quarto_rust::quarto_agent::QuartoAgent;
 use quarto_rust::quarto_agent::human_player::HumanPlayer;
 use quarto_rust::quarto_agent::negamax_agent::NegamaxAgent;
@@ -60,7 +60,7 @@ fn main() {
 
     player_one = init_agent(&game_config.player_one);
     player_two = init_agent(&game_config.player_two);
-    let mut quarto_game: Quarto = Quarto::new(player_one, player_two);
+    let mut quarto_game: QuartoSimulator = QuartoSimulator::new(player_one, player_two);
     if !args.contains(&no_logs_arg) {
         quarto_game.with_file_logs();
     }

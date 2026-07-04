@@ -1,6 +1,6 @@
 import numpy as np
-import quarto_util as qutil
-import quarto_agents.generic_quarto_agent as qagents
+import quarto_py.quarto_util as qutil
+import quarto_py.quarto_agents.generic_quarto_agent as qagents
 from datetime import datetime
 import time
 

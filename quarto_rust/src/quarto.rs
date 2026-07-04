@@ -8,8 +8,8 @@ use super::utils as qutils;
 use chrono::{Timelike, Utc};
 use game_result::GameResult;
 use game_stats::GameStats;
-use quarto_move::QuartoMove;
 use quarto_game_state::QuartoGameState;
+use quarto_move::QuartoMove;
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
@@ -24,8 +24,6 @@ pub struct QuartoSimulator {
     game_stats: GameStats,
     num_retries_allowed: u8,
 }
-
-
 
 impl QuartoSimulator {
     pub fn new(player_one: QuartoAgent, player_two: QuartoAgent) -> Self {

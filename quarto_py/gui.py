@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import font
 from PIL import ImageTk, Image
-from quarto import *
+from quarto_py.quarto import *
 from enum import Enum
-import quarto_agents
+import quarto_py.quarto_agents as quarto_agents
 
 BLANK_TILE = 16
 AGENT_DELAY_MS = 1500

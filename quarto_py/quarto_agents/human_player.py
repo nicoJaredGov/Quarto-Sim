@@ -1,4 +1,4 @@
-from quarto_agents.generic_quarto_agent import GenericQuartoAgent
+from quarto_py.quarto_agents.generic_quarto_agent import GenericQuartoAgent
 
 class HumanPlayer(GenericQuartoAgent):
     def __init__(self) -> None:

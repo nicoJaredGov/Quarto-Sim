@@ -1,5 +1,5 @@
-from quarto_agents.generic_quarto_agent import GenericQuartoAgent
-import quarto_util as qutil
+from quarto_py.quarto_agents.generic_quarto_agent import GenericQuartoAgent
+import quarto_py.quarto_util as qutil
 import numpy as np
 from bigtree.node.node import Node
 from random import sample
