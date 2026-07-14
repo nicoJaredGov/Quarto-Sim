@@ -1,8 +1,8 @@
-from quarto_py.quarto_agents.generic_quarto_agent import GenericQuartoAgent
+from quarto_agents.generic_quarto_agent import GenericQuartoAgent
 import numpy as np
 import itertools
 import pandas as pd
-import quarto_py.quarto_util as qutil
+import quarto_util as qutil
 
 
 # NegaMax

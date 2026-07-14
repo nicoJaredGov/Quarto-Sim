@@ -1,5 +1,5 @@
-from quarto_py.quarto import *
-import quarto_py.quarto_agents as qagents
+from quarto import *
+import quarto_agents as qagents
 import multiprocessing as mp
 import os
 import pandas as pd
