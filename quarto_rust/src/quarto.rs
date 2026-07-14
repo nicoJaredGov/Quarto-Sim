@@ -192,7 +192,7 @@ impl QuartoSimulator {
         self.reset();
 
         let mut log_file = qutils::create_timestamped_log_file(
-            "experimental_results/runs/",
+            "experiment_results/runs/",
             &self.player_one.name(),
             &self.player_two.name(),
         );

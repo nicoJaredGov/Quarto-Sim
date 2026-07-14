@@ -18,12 +18,14 @@ impl Agent for HumanPlayer {
     fn make_first_move(&self) -> u8 {
         get_user_move("Pick first piece for your opponent: ")
     }
+
     fn make_move(&self, state: QuartoGameState) -> QuartoMove {
         let _ = state;
         let position = get_user_move("Cell: ");
         let next_piece = get_user_move("Your opponent's next piece: ");
         QuartoMove(position, next_piece)
     }
+
     fn get_name(&self) -> String {
         self.name.clone()
     }

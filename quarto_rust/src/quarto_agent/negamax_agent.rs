@@ -26,9 +26,11 @@ impl Agent for NegamaxAgent {
     fn make_first_move(&self) -> u8 {
         rand::rng().random_range(0..16)
     }
+
     fn make_move(&self, state: QuartoGameState) -> QuartoMove {
         alpha_beta(state, self.search_depth, self.search_window, -500, 500).1
     }
+
     fn get_name(&self) -> String {
         format!("NegamaxAgent-{}-{}", self.search_depth, self.search_window)
     }
@@ -47,18 +49,19 @@ fn alpha_beta(
     if depth == 0 || state.available_positions.len() == 0 {
         return (qutils::line_evaluation(state.board), QuartoMove(16, 16));
     }
-
     if state.available_pieces.len() == 0 {
         state.available_pieces.insert(16);
     }
+
     let mut max_score = MIN_EVAL;
     let mut best_move = QuartoMove(16, 16);
-
     let mut search_window_counter: u8 = 0;
+
     let possible_moves = state
         .available_pieces
         .iter()
         .cartesian_product(state.available_positions.iter());
+
     for p in possible_moves {
         search_window_counter += 1;
         if search_window_counter > search_window {
