@@ -1,0 +1,5 @@
+# Python dependencies for the Quarto implementation
+numpy
+pandas
+Pillow
+bigtree

@@ -37,7 +37,7 @@ class QuartoGUI(tk.Tk):
 
     def _loadPhotos(self):
         self._photos = []
-        imagePaths = [f"images/{i}.png" for i in range(17)]
+        imagePaths = [f"../images/{i}.png" for i in range(17)]
         for imagePath in imagePaths:
             img = Image.open(imagePath)
             img = img.resize((int(0.75 * img.width), int(0.75 * img.height)))
