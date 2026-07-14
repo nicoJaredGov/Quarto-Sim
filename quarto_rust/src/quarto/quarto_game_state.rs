@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 const NUM_PIECES: u8 = 16;
 
+#[derive(Clone)]
 pub struct QuartoGameState {
     pub board: [[u8; 4]; 4],
     pub current_piece: u8,

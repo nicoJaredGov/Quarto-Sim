@@ -1,6 +1,6 @@
 import numpy as np
 import quarto_util as qutil
-import quarto_agents.generic_quarto_agent as qagents
+from quarto_agents.generic_quarto_agent import GenericQuartoAgent
 from datetime import datetime
 import time
 
@@ -8,8 +8,8 @@ import time
 class QuartoGame:
     def __init__(
         self,
-        agent1: qagents.GenericQuartoAgent,
-        agent2: qagents.GenericQuartoAgent,
+        agent1: GenericQuartoAgent,
+        agent2: GenericQuartoAgent,
         player1Name="Player 1",
         player2Name="Player 2",
         gui_mode=False,
@@ -36,10 +36,10 @@ class QuartoGame:
 
     def checkAgentsValid(self, agent1, agent2):
         assert agent1 is not None and issubclass(
-            type(agent1), qagents.GenericQuartoAgent
+            type(agent1), GenericQuartoAgent
         ), "Agent 1 is not initialized correctly."
         assert agent2 is not None and issubclass(
-            type(agent1), qagents.GenericQuartoAgent
+            type(agent1), GenericQuartoAgent
         ), "Agent 2 is not initialized correctly."
 
     def resetGame(self):

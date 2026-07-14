@@ -3,7 +3,7 @@ from tkinter import font
 from PIL import ImageTk, Image
 from quarto import *
 from enum import Enum
-import quarto_agents
+import quarto_agents as quarto_agents
 
 BLANK_TILE = 16
 AGENT_DELAY_MS = 1500
@@ -20,9 +20,10 @@ class QuartoGUI(tk.Tk):
         self.title("Quarto Game")
         self.player1IsHuman = False
         self.player2IsHuman = True
-        self.player1 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
-        #self.player2 = quarto_agents.NegamaxAgent(depth=2, searchWindow=64)
-        self.player2 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
+        # self.player1 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
+        self.player2 = quarto_agents.NegamaxAgent(depth=2, searchWindow=64)
+        self.player1 = quarto_agents.HumanPlayer()
+        # self.player2 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
         self._game = QuartoGame(self.player1, self.player2, gui_mode=True, bin_mode=False)
         self.moveCounter = 0
         self.isPlayerOneTurn = True
