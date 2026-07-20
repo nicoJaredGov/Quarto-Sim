@@ -15,16 +15,20 @@ class MoveType(Enum):
 
 
 class QuartoGUI(tk.Tk):
-    def __init__(self):
+    def __init__(
+        self, 
+        agent1: GenericQuartoAgent,
+        agent2: GenericQuartoAgent
+    ):
         super().__init__()
+
         self.title("Quarto Game")
-        self.player1IsHuman = False
-        self.player2IsHuman = True
-        # self.player1 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
-        self.player2 = quarto_agents.NegamaxAgent(depth=2, searchWindow=64)
-        self.player1 = quarto_agents.HumanPlayer()
-        # self.player2 = quarto_agents.GeneticMinmaxAgent(initialPopulationSize=2000, maxPopulationSize=5000)
-        self._game = QuartoGame(self.player1, self.player2, gui_mode=True, bin_mode=False)
+        self.player1IsHuman = type(agent1) is quarto_agents.HumanPlayer
+        self.player2IsHuman = type(agent2) is quarto_agents.HumanPlayer
+        self.player1 = agent1
+        self.player2 = agent2
+        self._game = QuartoGame(agent1, agent2, gui_mode=True, bin_mode=False)
+
         self.moveCounter = 0
         self.isPlayerOneTurn = True
         self.moveType = MoveType.PICK_PIECE
@@ -35,6 +39,7 @@ class QuartoGUI(tk.Tk):
         self._createBoardGrid()
         self._createPieceGrid()
 
+    # UI
     def _loadPhotos(self):
         self._photos = []
         imagePaths = [f"../images/{i}.png" for i in range(17)]
@@ -86,21 +91,43 @@ class QuartoGUI(tk.Tk):
         self.startButton.pack(side=tk.RIGHT)
         self.startButton.bind("<ButtonPress-1>", self.play)
 
+    def _toggleGridFreeze(self, toggleFreezeOn=True):
+        if toggleFreezeOn:
+            for row in range(4):
+                for col in range(4):
+                    self._cells[(row, col)].configure(state=tk.DISABLED)
+                    self._pieces[(row, col)].configure(state=tk.DISABLED)
+        else:
+            for row in range(4):
+                for col in range(4):
+                    if self._cells[(row, col)] not in self._takenCells:
+                        self._cells[(row, col)].configure(state=tk.ACTIVE)
+                    if self._pieces[(row, col)] not in self._takenPieces:
+                        self._pieces[(row, col)].configure(state=tk.ACTIVE)
+
+    def _updateDisplay(self, msg, color="black"):
+        self.display["text"] = msg
+        self.display["fg"] = color
+
+    def _setDisplayText(self, firstText, secondText=""):
+        self.display["text"] = firstText
+        self.display2["text"] = secondText
+
+    # LOGIC
     def _checkIfGameOver(self):
         if qutil.isGameOver(self._game.board):
             self._toggleGridFreeze()
             if self.isPlayerOneTurn:
-                self.display["text"] = "Player 1 Won!"
-                self.display2["text"] = ""
+                self._setDisplayText("Player 1 Won!")
             else:
-                self.display["text"] = "Player 2 Won!"
-                self.display2["text"] = ""
+                self._setDisplayText("Player 2 Won!")
             return True
+        
         elif self.moveCounter == 16:
             self._toggleGridFreeze()
-            self.display["text"] = "DRAW!"
-            self.display2["text"] = ""
+            self._setDisplayText("DRAW!")
             return True
+        
         return False
 
     def _updateState(self):
@@ -212,7 +239,7 @@ class QuartoGUI(tk.Tk):
         self._takenCells.clear()
         self._takenPieces.clear()
         self._resetGrids()
-        self._update_display(msg="Ready?")
+        self._updateDisplay(msg="Ready?")
         self.play(event)
 
     def placePiece(self, position):
@@ -255,20 +282,6 @@ class QuartoGUI(tk.Tk):
         self.pickNextPiece(nextPiece)
         self._handleMoveEnd()
 
-    def play(self, event):
-        self.display["text"] = "Player 1's turn"
-
-        if self.player1IsHuman:
-            self.display2["text"] = "Pick your opponent's first piece"
-        else:
-            self._toggleGridFreeze()
-            agentName = self.player1.name if self.isPlayerOneTurn else self.player2.name
-            self.display2["text"] = f"{agentName} is picking the first piece"
-            self.after(AGENT_DELAY_MS, self.makeAgentFirstMove)
-
-        self.startButton.bind("<ButtonPress-1>", self._resetState)
-        self.startButton.configure(text="Reset")
-
     def _updateCurrent(self, piece):
         target = self.currentButton
         target.configure(image=self._photos[piece], bg="#876c3e", text="")
@@ -283,29 +296,22 @@ class QuartoGUI(tk.Tk):
         self._takenCells.add(target)
         self.currentButton.configure(image=self._photos[BLANK_TILE], text="current")
 
-    def _toggleGridFreeze(self, toggleFreezeOn=True):
-        if toggleFreezeOn:
-            for row in range(4):
-                for col in range(4):
-                    self._cells[(row, col)].configure(state=tk.DISABLED)
-                    self._pieces[(row, col)].configure(state=tk.DISABLED)
+    def play(self, event):
+        self.display["text"] = "Player 1's turn"
+
+        if self.player1IsHuman:
+            self.display2["text"] = "Pick your opponent's first piece"
         else:
-            for row in range(4):
-                for col in range(4):
-                    if self._cells[(row, col)] not in self._takenCells:
-                        self._cells[(row, col)].configure(state=tk.ACTIVE)
-                    if self._pieces[(row, col)] not in self._takenPieces:
-                        self._pieces[(row, col)].configure(state=tk.ACTIVE)
+            self._toggleGridFreeze()
+            agentName = self.player1.name if self.isPlayerOneTurn else self.player2.name
+            self.display2["text"] = f"{agentName} is picking the first piece"
+            self.after(AGENT_DELAY_MS, self.makeAgentFirstMove)
 
-    def _update_display(self, msg, color="black"):
-        self.display["text"] = msg
-        self.display["fg"] = color
-
-
-def main():
-    gui = QuartoGUI()
-    gui.mainloop()
-
+        self.startButton.bind("<ButtonPress-1>", self._resetState)
+        self.startButton.configure(text="Reset")
 
 if __name__ == "__main__":
-    main()
+    agent1 = quarto_agents.HumanPlayer()
+    agent2 = quarto_agents.NegamaxAgent(depth=3, searchWindow=32)
+    gui = QuartoGUI(agent1, agent2)
+    gui.mainloop()
